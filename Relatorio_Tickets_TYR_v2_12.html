@@ -1,0 +1,2221 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Relatório de Tickets · TYR Energia</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+// Fallback: if XLSX not loaded, try alternative CDN
+window.addEventListener('load', function() {
+  if (typeof XLSX === 'undefined') {
+    var s = document.createElement('script');
+    s.src = 'https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js';
+    document.head.appendChild(s);
+  }
+});
+</script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --g:#1ec97e;--g2:#0fa05f;--g3:#dcfce7;--g4:#16a34a;
+  --navy:#1a2040;--navy2:#0f1629;--navy3:#141c35;
+  --ink:#0f172a;--ink2:#334155;--mu:#64748b;--fa:#94a3b8;
+  --ln:#e2e8f0;--ln2:#f1f5f9;--bg:#eef1f8;--wh:#ffffff;
+  --gt:rgba(30,201,126,.07);--gt2:rgba(30,201,126,.16);--gt3:rgba(30,201,126,.28);
+  --red:#ef4444;--red-bg:#fef2f2;--red-bd:#fca5a5;--red-txt:#dc2626;
+  --amber:#f59e0b;--amber-bg:#fffbeb;--amber-bd:#fcd34d;--amber-txt:#92400e;
+  --blue:#3b82f6;--blue-bg:#eff6ff;--blue-bd:#bfdbfe;--blue-txt:#1d4ed8;
+  --purple:#8b5cf6;--purple-bg:#f5f3ff;--purple-bd:#ddd6fe;--purple-txt:#6d28d9;
+  --teal:#0891b2;--teal-bg:#ecfeff;--teal-bd:#a5f3fc;--teal-txt:#0e7490;
+  --r:12px;--r2:8px;
+  --sh:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --sh2:0 4px 16px rgba(0,0,0,.10),0 2px 6px rgba(0,0,0,.06);
+  --sh3:0 20px 60px rgba(0,0,0,.22),0 8px 20px rgba(0,0,0,.12);
+}
+html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+.layout{display:flex;height:100vh;overflow:hidden;}
+
+/* ── SIDEBAR ─────────────────────────────────────────────── */
+.sidebar{width:226px;min-width:226px;background:var(--navy2);display:flex;flex-direction:column;overflow:hidden;border-right:1px solid rgba(255,255,255,.04);position:relative;}
+.sidebar::after{content:'';position:absolute;top:0;right:0;width:1px;height:100%;background:linear-gradient(180deg,transparent,rgba(30,201,126,.2),transparent);pointer-events:none;}
+.sb-logo{padding:16px 14px 13px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.logo-mark{width:32px;height:32px;background:linear-gradient(135deg,var(--g),#0fa05f);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:var(--navy2);flex-shrink:0;letter-spacing:-.5px;box-shadow:0 2px 8px rgba(30,201,126,.35);}
+.logo-info{min-width:0;}
+.logo-name{font-size:13px;font-weight:700;color:rgba(255,255,255,.92);letter-spacing:-.2px;}
+.logo-sub{font-size:9px;color:rgba(255,255,255,.28);letter-spacing:.1em;text-transform:uppercase;margin-top:1px;}
+
+.sb-upload{padding:10px 10px 8px;border-bottom:1px solid rgba(255,255,255,.05);flex-shrink:0;}
+.upload-btn{width:100%;display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba(30,201,126,.1);border:1px dashed rgba(30,201,126,.3);border-radius:8px;cursor:pointer;transition:all .15s;color:var(--g);font-family:'DM Sans',sans-serif;font-size:11.5px;font-weight:600;}
+.upload-btn:hover{background:rgba(30,201,126,.18);border-color:rgba(30,201,126,.5);}
+.upload-icon{font-size:14px;flex-shrink:0;}
+.upload-info{font-size:9px;color:rgba(255,255,255,.25);text-align:center;margin-top:4px;letter-spacing:.03em;}
+#fileInput{display:none;}
+
+.sb-section-lbl{font-size:8.5px;font-weight:700;letter-spacing:.16em;color:rgba(255,255,255,.18);text-transform:uppercase;padding:10px 14px 5px;flex-shrink:0;}
+.all-btn{display:flex;align-items:center;justify-content:space-between;margin:0 8px 4px;padding:7px 10px;background:rgba(30,201,126,.07);border:1px solid rgba(30,201,126,.15);border-radius:8px;cursor:pointer;color:rgba(255,255,255,.55);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;transition:all .13s;flex-shrink:0;}
+.all-btn:hover,.all-btn.active{background:rgba(30,201,126,.16);border-color:rgba(30,201,126,.4);color:var(--g);}
+.mbadge{font-size:9px;font-weight:700;padding:1px 6px;border-radius:99px;background:rgba(255,255,255,.07);color:rgba(255,255,255,.25);font-family:'DM Mono',monospace;}
+.all-btn.active .mbadge,.month-btn.active .mbadge{background:rgba(30,201,126,.2);color:var(--g);}
+.month-nav{flex:1;overflow-y:auto;padding:2px 8px 16px;}
+.month-nav::-webkit-scrollbar{width:3px;}
+.month-nav::-webkit-scrollbar-thumb{background:rgba(255,255,255,.07);border-radius:2px;}
+.month-btn{width:100%;text-align:left;background:transparent;border:none;cursor:pointer;padding:6px 10px;border-radius:8px;color:rgba(255,255,255,.38);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;display:flex;align-items:center;justify-content:space-between;transition:all .13s;margin-bottom:1px;}
+.month-btn:hover{background:rgba(255,255,255,.05);color:rgba(255,255,255,.72);}
+.month-btn.active{background:rgba(30,201,126,.13);color:var(--g);font-weight:700;}
+.month-dot{width:5px;height:5px;border-radius:50%;background:var(--fa);margin-right:5px;flex-shrink:0;transition:background .13s;}
+.month-btn.active .month-dot{background:var(--g);}
+.sb-empty{padding:20px 14px;text-align:center;color:rgba(255,255,255,.18);font-size:11px;line-height:1.6;}
+.sb-empty-icon{font-size:28px;margin-bottom:8px;opacity:.4;}
+
+/* ── MAIN ─────────────────────────────────────────────────── */
+.main{flex:1;overflow-y:auto;display:flex;flex-direction:column;min-width:0;scroll-behavior:smooth;}
+.main::-webkit-scrollbar{width:5px;}
+.main::-webkit-scrollbar-thumb{background:var(--ln);border-radius:3px;}
+
+/* TOPBAR */
+.topbar{background:var(--wh);border-bottom:1px solid var(--ln);padding:11px 24px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:30;box-shadow:0 1px 0 var(--ln);}
+.tb-dot{width:7px;height:7px;border-radius:50%;background:var(--g);box-shadow:0 0 0 2px rgba(30,201,126,.2);flex-shrink:0;}
+.tb-title{font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.2px;}
+.tb-badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px;background:var(--gt2);color:var(--g2);display:none;}
+.tb-sub{font-size:11px;color:var(--fa);margin-left:auto;white-space:nowrap;}
+.tb-actions{display:flex;gap:6px;align-items:center;margin-left:12px;}
+
+/* VIEW TABS — inside topbar */
+.tb-tabs{display:flex;gap:2px;align-items:center;margin-left:auto;}
+.tb-tab{background:transparent;border:1px solid transparent;border-radius:7px;padding:6px 13px;font-size:11.5px;font-weight:600;color:var(--mu);cursor:pointer;transition:all .13s;font-family:'DM Sans',sans-serif;white-space:nowrap;}
+.tb-tab:hover{background:var(--ln2);color:var(--ink);}
+.tb-tab.active{background:var(--navy2);color:#fff;border-color:var(--navy2);}
+.tab-content{display:none;}
+.tab-content.active{display:flex;flex-direction:column;}
+
+/* KPI ROW */
+.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding:14px 24px 0;}
+.kpi{background:var(--wh);border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh);border:1px solid var(--ln);cursor:pointer;transition:all .15s;position:relative;overflow:hidden;}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:var(--r) var(--r) 0 0;background:var(--ln);transition:background .15s;}
+.kpi:hover{transform:translateY(-1px);box-shadow:var(--sh2);}
+.kpi.k-green::before{background:var(--g);}
+.kpi.k-red::before{background:var(--red);}
+.kpi.k-amber::before{background:var(--amber);}
+.kpi.k-blue::before{background:var(--blue);}
+.kpi.k-purple::before{background:var(--purple);}
+.kpi.k-teal::before{background:var(--teal);}
+.kpi-val{font-size:26px;font-weight:800;line-height:1;margin-bottom:2px;letter-spacing:-.5px;font-family:'DM Mono',monospace;}
+.kpi-val.green{color:var(--g2);}
+.kpi-val.red{color:var(--red);}
+.kpi-val.amber{color:var(--amber);}
+.kpi-val.blue{color:var(--blue-txt);}
+.kpi-val.purple{color:var(--purple-txt);}
+.kpi-val.teal{color:var(--teal-txt);}
+.kpi-lbl{font-size:9.5px;color:var(--mu);font-weight:700;text-transform:uppercase;letter-spacing:.07em;line-height:1.3;}
+.kpi-delta{font-size:10px;margin-top:5px;display:flex;align-items:center;gap:3px;}
+.d-up{color:var(--red-txt);}
+.d-dn{color:var(--g4);}
+.d-fl{color:var(--mu);}
+
+/* CONTENT */
+.content{padding:12px 24px 40px;display:flex;flex-direction:column;gap:12px;}
+.row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.row-32{display:grid;grid-template-columns:3fr 2fr;gap:12px;}
+.row-23{display:grid;grid-template-columns:2fr 3fr;gap:12px;}
+.card{background:var(--wh);border-radius:var(--r);border:1px solid var(--ln);box-shadow:var(--sh);padding:16px;}
+.card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:13px;}
+.card-title{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);}
+.card-badge{font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--ln2);color:var(--fa);font-family:'DM Mono',monospace;}
+
+/* RANK BARS */
+.rank-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;cursor:pointer;padding:3px 5px;border-radius:6px;transition:background .1s;}
+.rank-row:hover{background:var(--gt);}
+.rank-num{font-size:9px;font-weight:700;color:var(--fa);width:14px;flex-shrink:0;text-align:center;}
+.rank-label{font-size:11.5px;color:var(--ink2);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rank-bar-wrap{width:70px;height:5px;background:var(--ln2);border-radius:3px;overflow:hidden;flex-shrink:0;}
+.rank-bar{height:100%;border-radius:3px;transition:width .5s cubic-bezier(.4,0,.2,1);}
+.rank-count{font-size:11px;font-weight:700;color:var(--ink2);min-width:22px;text-align:right;font-family:'DM Mono',monospace;}
+
+/* DONUT */
+.donut-wrap{display:flex;align-items:center;gap:14px;}
+.donut-legend{flex:1;display:flex;flex-direction:column;gap:5px;}
+.donut-item{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--ink2);cursor:pointer;padding:3px 5px;border-radius:5px;transition:background .1s;}
+.donut-item:hover{background:var(--ln2);}
+.donut-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.donut-lbl{flex:1;}
+.donut-pct{font-size:10px;font-weight:700;color:var(--mu);font-family:'DM Mono',monospace;}
+
+/* SVG CHART */
+.chart-svg-wrap{position:relative;}
+
+/* NIVEL BADGES */
+.nbadge{display:inline-flex;align-items:center;font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:99px;}
+.n1{background:var(--red-bg);color:var(--red-txt);}
+.n2{background:var(--amber-bg);color:var(--amber-txt);}
+.n3{background:var(--blue-bg);color:var(--blue-txt);}
+
+/* STATUS PILLS */
+.spill{display:inline-flex;align-items:center;gap:3px;font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:99px;white-space:nowrap;}
+.s-fin{background:#dcfce7;color:#15803d;}
+.s-atr{background:var(--red-bg);color:var(--red-txt);}
+.s-tri{background:var(--amber-bg);color:var(--amber-txt);}
+
+/* PRODUCT PILLS */
+.ppill{display:inline-flex;align-items:center;gap:4px;font-size:9.5px;font-weight:700;padding:2px 9px;border-radius:99px;}
+.pml{background:var(--blue-bg);color:var(--blue-txt);}
+.pgd{background:var(--g3);color:var(--g4);}
+.pna{background:var(--ln2);color:var(--fa);}
+
+/* ALERT CARDS */
+.alert-item{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:9px;margin-bottom:6px;border:1px solid transparent;cursor:pointer;transition:all .13s;}
+.alert-item:hover{transform:translateX(2px);}
+.alert-item:last-child{margin-bottom:0;}
+.alert-ico{font-size:15px;flex-shrink:0;margin-top:1px;}
+.alert-body{}
+.alert-title{font-size:11.5px;font-weight:600;line-height:1.3;}
+.alert-sub{font-size:10.5px;color:var(--mu);margin-top:2px;line-height:1.4;}
+.a-red{background:var(--red-bg);border-color:var(--red-bd);}
+.a-red .alert-title{color:var(--red-txt);}
+.a-amber{background:var(--amber-bg);border-color:var(--amber-bd);}
+.a-amber .alert-title{color:var(--amber-txt);}
+.a-green{background:#f0fdf4;border-color:#86efac;}
+.a-green .alert-title{color:var(--g4);}
+.a-blue{background:var(--blue-bg);border-color:var(--blue-bd);}
+.a-blue .alert-title{color:var(--blue-txt);}
+
+/* TREND CHART */
+.trend-bar-row{display:flex;align-items:flex-end;gap:3px;height:64px;margin-bottom:4px;}
+.trend-bar-col{flex:1;display:flex;flex-direction:column;align-items:center;cursor:pointer;}
+.trend-bar-outer{width:100%;border-radius:4px 4px 0 0;position:relative;overflow:visible;}
+.trend-bar-inner{width:100%;border-radius:4px 4px 0 0;transition:all .3s cubic-bezier(.4,0,.2,1);min-height:3px;}
+.trend-bar-inner:hover{filter:brightness(1.1);}
+.trend-bar-lbl{font-size:7.5px;color:var(--fa);margin-top:4px;font-family:'DM Mono',monospace;text-align:center;white-space:nowrap;}
+.trend-bar-lbl.active{color:var(--g);font-weight:700;}
+.trend-bar-val{font-size:8px;font-weight:700;color:var(--mu);position:absolute;top:-13px;left:50%;transform:translateX(-50%);white-space:nowrap;opacity:0;transition:opacity .15s;pointer-events:none;}
+.trend-bar-col:hover .trend-bar-val{opacity:1;}
+
+/* DRILLDOWN / CATEGORIES */
+.cat-list{display:flex;flex-direction:column;gap:5px;}
+.cat-card{background:var(--wh);border-radius:10px;border:1px solid var(--ln);overflow:hidden;box-shadow:var(--sh);transition:box-shadow .13s;}
+.cat-card:hover{box-shadow:var(--sh2);}
+.cat-hdr{display:flex;align-items:center;gap:11px;padding:11px 15px;cursor:pointer;user-select:none;transition:background .12s;}
+.cat-hdr:hover{background:var(--gt);}
+.cat-color{width:3px;height:24px;border-radius:2px;flex-shrink:0;}
+.cat-name{font-size:13px;font-weight:600;color:var(--ink);flex:1;}
+.cat-sub-lbl{font-size:10px;color:var(--fa);margin-right:8px;}
+.cat-pct-bar{flex:0 0 80px;height:4px;background:var(--ln2);border-radius:2px;overflow:hidden;}
+.cat-pct-fill{height:100%;border-radius:2px;transition:width .45s cubic-bezier(.4,0,.2,1);}
+.cat-badge{font-size:11px;font-weight:700;color:var(--g2);background:var(--gt2);padding:3px 10px;border-radius:20px;font-family:'DM Mono',monospace;white-space:nowrap;}
+.cat-chevron{color:var(--fa);font-size:10px;transition:transform .2s;margin-left:4px;}
+.cat-card.open .cat-chevron{transform:rotate(90deg);}
+.cat-body{display:none;border-top:1px solid var(--ln2);}
+.cat-card.open .cat-body{display:block;}
+.subcat-list{padding:8px 12px;}
+.subcat-row{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;transition:background .1s;}
+.subcat-row:hover{background:var(--gt);}
+.subcat-name{font-size:12px;color:var(--ink2);flex:1;}
+.subcat-bar-wrap{width:60px;height:3px;background:var(--ln2);border-radius:2px;overflow:hidden;}
+.subcat-bar{height:100%;border-radius:2px;background:var(--g);transition:width .4s;}
+.subcat-count{font-size:10.5px;font-weight:700;color:var(--mu);font-family:'DM Mono',monospace;min-width:20px;text-align:right;}
+
+/* TICKETS TABLE SECTION */
+.tickets-section{padding:0 24px 48px;display:flex;flex-direction:column;gap:10px;}
+.filters-bar{background:var(--wh);border:1px solid var(--ln);border-radius:var(--r);padding:12px 16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+.f-group{display:flex;align-items:center;gap:5px;}
+.f-lbl{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--mu);white-space:nowrap;}
+.f-select,.f-search{background:var(--ln2);border:1px solid var(--ln);border-radius:6px;color:var(--ink2);font-family:'DM Sans',sans-serif;font-size:11.5px;padding:5px 8px;outline:none;cursor:pointer;transition:border-color .12s;}
+.f-select:focus,.f-search:focus{border-color:var(--g);}
+.f-search{width:160px;}
+.f-count{font-size:10.5px;color:var(--mu);margin-left:auto;white-space:nowrap;font-family:'DM Mono',monospace;font-weight:600;}
+.f-reset{background:transparent;border:none;font-size:10px;color:var(--fa);cursor:pointer;padding:2px 6px;border-radius:4px;transition:all .1s;}
+.f-reset:hover{color:var(--red-txt);background:var(--red-bg);}
+
+.tbl-wrap{background:var(--wh);border:1px solid var(--ln);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;}
+.tbl-scroll{overflow-x:auto;}
+.t-table{width:100%;border-collapse:collapse;font-size:12px;min-width:820px;}
+.t-table th{font-size:8.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);background:var(--ln2);padding:9px 13px;text-align:left;border-top:1px solid var(--ln);border-bottom:1px solid var(--ln);white-space:nowrap;cursor:pointer;user-select:none;}
+.t-table th:hover{color:var(--ink);}
+.t-table td{padding:10px 13px;color:var(--ink2);border-bottom:1px solid var(--ln2);vertical-align:middle;}
+.t-table tbody tr{cursor:pointer;transition:background .08s;}
+.t-table tbody tr:hover td{background:var(--gt);}
+.t-table tr:last-child td{border-bottom:none;}
+.tid{font-family:'DM Mono',monospace;font-size:10.5px;font-weight:600;color:var(--g2);}
+.empresa-nm{font-size:12.5px;font-weight:600;color:var(--ink);}
+.solicit-nm{font-size:11px;color:var(--mu);margin-top:1px;display:block;}
+.date-cell{font-family:'DM Mono',monospace;font-size:10.5px;color:var(--ink2);white-space:nowrap;}
+.date-cell.empty{color:var(--fa);}
+.sort-arr{margin-left:3px;opacity:.3;font-size:8px;}
+.sort-arr.on{opacity:1;color:var(--g2);}
+.resp-cell{font-size:11px;color:var(--mu);max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.desc-cell{font-size:11px;color:var(--ink2);max-width:220px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.4;}
+.no-results{padding:44px;text-align:center;color:var(--fa);font-size:13.5px;}
+.no-results-sub{font-size:11px;color:var(--fa);margin-top:6px;opacity:.7;}
+.tbl-footer{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-top:1px solid var(--ln2);font-size:11px;color:var(--mu);}
+.pagination{display:flex;gap:4px;align-items:center;}
+.page-btn{width:28px;height:28px;border-radius:6px;border:1px solid var(--ln);background:var(--wh);cursor:pointer;font-size:11px;font-weight:600;color:var(--mu);transition:all .1s;display:flex;align-items:center;justify-content:center;}
+.page-btn:hover{background:var(--ln2);}
+.page-btn.active{background:var(--navy2);color:#fff;border-color:var(--navy2);}
+.page-btn:disabled{opacity:.3;cursor:default;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(10,18,40,.6);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(6px);padding:20px;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--wh);border-radius:16px;width:100%;max-width:700px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--sh3);animation:mIn .2s cubic-bezier(.34,1.2,.7,1);}
+@keyframes mIn{from{opacity:0;transform:scale(.95) translateY(10px)}to{opacity:1;transform:none}}
+.modal-top{padding:18px 20px 14px;border-bottom:1px solid var(--ln);display:flex;align-items:flex-start;gap:12px;}
+.modal-id-badge{font-family:'DM Mono',monospace;font-size:11px;font-weight:600;color:var(--g2);background:var(--gt2);padding:3px 10px;border-radius:6px;white-space:nowrap;flex-shrink:0;}
+.modal-title-block{flex:1;min-width:0;}
+.modal-empresa{font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.2px;}
+.modal-sub{font-size:11.5px;color:var(--mu);margin-top:3px;}
+.modal-close{background:var(--ln2);border:none;cursor:pointer;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--mu);flex-shrink:0;transition:all .13s;}
+.modal-close:hover{background:var(--ln);color:var(--ink);}
+.modal-body{overflow-y:auto;padding:18px 20px;flex:1;}
+.modal-body::-webkit-scrollbar{width:4px;}
+.modal-body::-webkit-scrollbar-thumb{background:var(--ln);border-radius:2px;}
+.mpills{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+.mpill{font-size:10.5px;font-weight:600;padding:3px 10px;border-radius:99px;background:var(--ln2);color:var(--ink2);}
+.m-timeline{display:flex;align-items:center;gap:0;margin-bottom:16px;background:var(--ln2);border-radius:10px;padding:12px 16px;overflow-x:auto;}
+.m-tl-step{flex:1;min-width:100px;text-align:center;}
+.m-tl-step:not(:last-child)::after{content:'→';color:var(--fa);font-size:13px;display:inline-block;margin:0 -8px;}
+.m-tl-icon{font-size:16px;margin-bottom:4px;}
+.m-tl-lbl{font-size:8.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--fa);margin-bottom:3px;}
+.m-tl-val{font-size:11px;font-weight:600;color:var(--ink2);font-family:'DM Mono',monospace;}
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+.mfield label{font-size:8.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--fa);display:block;margin-bottom:4px;}
+.mfield p{font-size:12.5px;color:var(--ink2);line-height:1.5;}
+.mfield p.mono{font-family:'DM Mono',monospace;font-size:11.5px;}
+.full{grid-column:1/-1;}
+.mtext{margin-bottom:12px;}
+.mtext label{font-size:8.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--fa);display:block;margin-bottom:6px;}
+.mtext p{font-size:12.5px;color:var(--ink2);line-height:1.6;background:var(--ln2);padding:11px 13px;border-radius:8px;border-left:3px solid var(--ln);white-space:pre-line;}
+.mtext p.res{border-left-color:var(--g);}
+.mav{display:flex;align-items:center;gap:10px;background:var(--gt);padding:10px 13px;border-radius:8px;margin-top:4px;border:1px solid var(--gt3);}
+.mstars{font-size:16px;letter-spacing:1px;}
+.mav-val{font-size:14px;font-weight:800;color:var(--g2);font-family:'DM Mono',monospace;}
+.mav-lbl{font-size:10.5px;color:var(--mu);}
+.msla{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;font-size:11.5px;font-weight:600;margin-bottom:12px;}
+.msla.ok{background:#f0fdf4;color:#15803d;border:1px solid #86efac;}
+.msla.nok{background:var(--red-bg);color:var(--red-txt);border:1px solid var(--red-bd);}
+
+/* RESPONSIVE ADJUSTMENTS */
+.week-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px;}
+.wk-card{background:var(--ln2);border-radius:9px;padding:10px 12px;border:1px solid var(--ln);cursor:pointer;transition:all .13s;}
+.wk-card:hover,.wk-card.active{background:var(--navy2);border-color:var(--navy2);}
+.wk-card:hover .wk-lbl,.wk-card.active .wk-lbl,
+.wk-card:hover .wk-sub,.wk-card.active .wk-sub{color:rgba(255,255,255,.4);}
+.wk-card:hover .wk-val,.wk-card.active .wk-val{color:#fff;}
+.wk-lbl{font-size:8.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);margin-bottom:3px;}
+.wk-val{font-size:20px;font-weight:800;color:var(--ink);line-height:1;font-family:'DM Mono',monospace;}
+.wk-sub{font-size:9.5px;color:var(--fa);margin-top:3px;}
+.wk-bar{height:2px;border-radius:2px;background:var(--g);margin-top:5px;}
+
+/* SLA SECTION */
+.sla-bar-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--ln2);}
+.sla-bar-row:last-child{border-bottom:none;}
+.sla-lbl{font-size:11.5px;color:var(--ink2);flex:1;}
+.sla-val{font-size:11px;font-weight:700;font-family:'DM Mono',monospace;min-width:50px;text-align:right;}
+.sla-pct-wrap{width:80px;height:5px;background:var(--ln2);border-radius:3px;overflow:hidden;}
+.sla-pct-fill{height:100%;border-radius:3px;transition:width .5s;}
+
+/* CROSS TABLE */
+.cross-table{width:100%;border-collapse:collapse;font-size:11.5px;}
+.cross-table th{font-size:8.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mu);padding:7px 10px;text-align:left;background:var(--ln2);border-top:1px solid var(--ln);border-bottom:1px solid var(--ln);white-space:nowrap;}
+.cross-table td{padding:8px 10px;color:var(--ink2);border-bottom:1px solid var(--ln2);vertical-align:middle;}
+.cross-table tr:last-child td{border-bottom:none;}
+.cross-table tbody tr{transition:background .08s;cursor:pointer;}
+.cross-table tbody tr:hover td{background:var(--gt);}
+.cross-table .tr-total td{background:var(--ln2);font-weight:700;color:var(--ink);border-top:1px solid var(--ln);}
+
+/* RESPONSIBLE TABLE */
+.resp-table{width:100%;border-collapse:collapse;font-size:12px;}
+.resp-table th{font-size:8.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);padding:7px 10px;text-align:left;background:var(--ln2);border-top:1px solid var(--ln);border-bottom:1px solid var(--ln);}
+.resp-table td{padding:9px 10px;color:var(--ink2);border-bottom:1px solid var(--ln2);vertical-align:middle;}
+.resp-table tr:last-child td{border-bottom:none;}
+.resp-table tbody tr{cursor:pointer;transition:background .08s;}
+.resp-table tbody tr:hover td{background:var(--gt);}
+.avatar{width:26px;height:26px;border-radius:50%;background:var(--navy2);color:var(--g);display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;margin-right:6px;font-family:'DM Mono',monospace;}
+
+/* LOADING STATE */
+.loading-state{padding:60px;text-align:center;color:var(--fa);}
+.loading-spinner{width:32px;height:32px;border:3px solid var(--ln);border-top-color:var(--g);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* CHANNEL TAG */
+.ch-tag{display:inline-flex;align-items:center;gap:3px;font-size:9.5px;font-weight:600;padding:2px 8px;border-radius:4px;}
+.ch-email{background:#eff6ff;color:#1d4ed8;}
+.ch-wpp{background:#f0fdf4;color:#15803d;}
+.ch-tel{background:#fdf4ff;color:#7c3aed;}
+
+/* NÍVEL CLIENTE */
+.nc-pill{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;padding:2px 7px;border-radius:99px;}
+.nc-bronze{background:#fef3c7;color:#92400e;}
+.nc-prata{background:#f1f5f9;color:#475569;}
+.nc-ouro{background:#fefce8;color:#854d0e;}
+.nc-diamante{background:#eff6ff;color:#1d4ed8;}
+
+/* PRIORITY */
+.pr-tag{display:inline-block;font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px;}
+.pr-urgent{background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;}
+.pr-high{background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;}
+.pr-normal{background:var(--ln2);color:var(--mu);border:1px solid var(--ln);}
+.pr-low{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--navy2);color:#fff;padding:12px 18px;border-radius:10px;font-size:13px;font-weight:500;z-index:999;display:none;align-items:center;gap:8px;box-shadow:var(--sh3);animation:toastIn .25s cubic-bezier(.34,1.2,.7,1);}
+.toast.show{display:flex;}
+@keyframes toastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* CONSOLIDADO TABS */
+.c-tabs{display:flex;gap:4px;margin-bottom:10px;}
+.c-tab{padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;color:var(--mu);cursor:pointer;border:1px solid transparent;transition:all .12s;}
+.c-tab:hover{background:var(--ln2);}
+.c-tab.active{background:var(--navy2);color:#fff;}
+.c-panel{display:none;}
+.c-panel.active{display:block;}
+
+/* TREND LINE SVG */
+.trend-line-wrap{position:relative;height:90px;margin-bottom:4px;}
+</style>
+</head>
+<body>
+
+<div class="layout">
+<!-- ═══════════════ SIDEBAR ═══════════════ -->
+<aside class="sidebar">
+  <div class="sb-logo">
+    <div class="logo-mark">T</div>
+    <div class="logo-info">
+      <div class="logo-name">TYR Energia</div>
+      <div class="logo-sub">Tickets · Suporte</div>
+    </div>
+  </div>
+  <div class="sb-upload">
+    <label class="upload-btn" for="fileInput">
+      <span class="upload-icon">📂</span>
+      <span>Importar Planilha</span>
+    </label>
+    <input type="file" id="fileInput" accept=".xlsx,.xls">
+    <div class="upload-info">Aceita .xlsx · Airtable export</div>
+  </div>
+  <button class="all-btn" id="allBtn" onclick="selectAll()">
+    <span>Visão Consolidada</span>
+    <span class="mbadge" id="allBadge">—</span>
+  </button>
+  <div class="sb-section-lbl">Mês a mês</div>
+  <nav class="month-nav" id="monthNav">
+    <div class="sb-empty"><div class="sb-empty-icon">📊</div>Importe uma planilha para começar</div>
+  </nav>
+</aside>
+
+<!-- ═══════════════ MAIN ═══════════════ -->
+<main class="main" id="mainArea">
+  <div class="topbar">
+    <div class="tb-dot"></div>
+    <div class="tb-title" id="tbTitle">Selecione um período</div>
+    <div class="tb-badge" id="tbBadge"></div>
+    <div class="tb-tabs" id="tbTabs" style="display:none;align-items:center;gap:3px;margin-left:auto;">
+      <button class="tb-tab active" id="tab-btn-exec" onclick="switchTab('exec')">📊 Visão Executiva</button>
+      <button class="tb-tab" id="tab-btn-detalhe" onclick="switchTab('detalhe')">🔍 Análise Detalhada</button>
+      <button class="tb-tab" id="tab-btn-tickets" onclick="switchTab('tickets')">🎫 Tickets</button>
+    </div>
+    <div class="tb-sub" id="tbSub">TYR Energia · Central de Atendimento</div>
+  </div>
+  <div id="mainContent" style="display:flex;align-items:center;justify-content:center;flex:1;padding:40px;">
+    <div style="text-align:center;color:var(--fa);max-width:340px;">
+      <div style="font-size:48px;margin-bottom:16px;">📋</div>
+      <div style="font-size:18px;font-weight:700;color:var(--ink2);margin-bottom:8px;">Nenhum dado carregado</div>
+      <div style="font-size:13px;line-height:1.6;">Clique em <strong style="color:var(--g)">Importar Planilha</strong> na barra lateral para carregar a base de tickets e visualizar o relatório completo.</div>
+    </div>
+  </div>
+</main>
+</div>
+
+<!-- ═══════════════ MODAL TICKET ═══════════════ -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-top">
+      <div class="modal-id-badge" id="mId"></div>
+      <div class="modal-title-block">
+        <div class="modal-empresa" id="mEmpresa"></div>
+        <div class="modal-sub" id="mSub"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span id="toastIcon">✅</span>
+  <span id="toastMsg"></span>
+</div>
+
+<script>
+/* =====================================================================
+   TYR ENERGIA — RELATÓRIO DE TICKETS v2.0
+   Dinâmico, importação xlsx, interativo, visual executivo
+   ===================================================================== */
+
+// ── STATE ────────────────────────────────────────────────────────────
+let ALL_TICKETS   = [];
+let MONTHS_META   = {};   // { "2026-03": { label, year, month, tickets[] } }
+let MONTHS_ORDER  = [];   // sorted keys
+let CURRENT_VIEW  = null; // null = consolidado, or "2026-03"
+let WEEK_FILTER = null; // when set, filters tickets by semana number
+let currentTickets = []; // tracks tickets currently displayed for NPS modal
+let SORT_COL      = 'criado';
+let SORT_DIR      = 'desc';
+let CURRENT_PAGE  = 1;
+const PAGE_SIZE   = 20;
+let ACTIVE_TAB    = 'exec';
+let FILTER_STATE  = { mes:'', produto:'', responsavel:'', status:'', nivel:'', canal:'', busca:'' };
+
+// ── COLUMN MAP (xlsx → normalized) ──────────────────────────────────
+const COL = {
+  id:           'ID do Ticket',
+  catPrincipal: 'Categoria Principal',
+  subcat:       'Subcategoria',
+  criado:       'Data de Criação do Ticket',
+  concluido:    'Data de Conclusão do Ticket',
+  solicitante:  'Nome do Solicitante',
+  empresa:      'Nome da Empresa',
+  email:        'E-mail para contato com cliente',
+  tipoSuporte:  'Tipo de Suporte Solicitado',
+  descricao:    'Descrição detalhada do problema',
+  resolucao:    'Resolução do Problema',
+  nivel:        'Nível do Ticket',
+  horas:        'Horas Úteis para conclusão do Ticket (CALCULADO)',
+  diasUteis:    'Dias Uteis (da criação até a conclusão)',
+  produto:      'Produto do cliente (TYR)',
+  status:       'Status de Conclusão',
+  nivelCliente: 'Nível do Cliente (Tyr)',
+  prioridade:   'Prioridade',
+  responsavel:  'Pessoas Atribuídas',
+  mes:          'Mês',
+  ano:          'Ano',
+  mesExtenso:   'Mês extenso',
+  mesAno:       'Mês e Ano',
+  atrasado:     'Tickets Atrasados',
+  canal:        'Melhor canal de comunicação',
+  avEquipe:     'Avaliação da equipe',
+  avTempo:      'Tempo de atendimento',
+  avQualidade:  'Qualidade da solução',
+  avMedia:      'Média de avaliação',
+  avGeral:      'Avaliação geral',
+  satisfacao:   'Satisfação do Cliente',
+  telefone:     'Telefone do cliente',
+  semana:       'Semana',
+  quinzena:     'Quinzena',
+  problema:     'Problema do cliente (TYR)',
+  problemEsp:   'Problema específico',
+  gut:          'Valor GUT',
+  priorityGUT:  'Prioridade GUT',
+  numeracao:    'Numeração Tickets Tyr',
+  tempoPrResp:  'Tempo de Primeira Resposta',
+  metaConc:     'Meta - Tempo de Conclusão',
+  tempoEspera:  'Tempo de conclusão (Descontando tempo de espera)',
+  ticketEspera: 'Ticket em espera',
+  registrosEspera: 'Registros de Espera',
+};
+
+// ── COLORS ───────────────────────────────────────────────────────────
+const CAT_COLORS = ['#1ec97e','#3b82f6','#f59e0b','#8b5cf6','#ef4444','#0891b2','#ec4899','#14b8a6','#f97316','#6366f1','#84cc16','#a855f7','#06b6d4'];
+
+// ── FILE IMPORT ──────────────────────────────────────────────────────
+document.getElementById('fileInput').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  // Check XLSX library loaded
+  if (typeof XLSX === 'undefined') {
+    showToast('❌', 'Biblioteca XLSX não carregada. Verifique sua conexão e recarregue a página.');
+    this.value = '';
+    return;
+  }
+
+  showToast('⏳', `Lendo "${file.name}"…`);
+
+  // Show loading state in main content
+  document.getElementById('mainContent').innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:center;flex:1;padding:60px;">
+      <div style="text-align:center;">
+        <div class="loading-spinner"></div>
+        <div style="font-size:14px;font-weight:600;color:var(--ink2);margin-bottom:6px;">Processando planilha…</div>
+        <div style="font-size:12px;color:var(--fa);">${file.name}</div>
+      </div>
+    </div>`;
+  document.getElementById('tbTitle').textContent = 'Carregando…';
+  document.getElementById('tbBadge').style.display = 'none';
+
+  const reader = new FileReader();
+
+  reader.onerror = function() {
+    showToast('❌', 'Erro ao ler o arquivo. Tente novamente.');
+    document.getElementById('tbTitle').textContent = 'Erro ao carregar';
+  };
+
+  reader.onload = function(evt) {
+    try {
+      const arrayBuffer = evt.target.result;
+      const wb = XLSX.read(arrayBuffer, { type: 'array', cellDates: true });
+
+      if (!wb.SheetNames || wb.SheetNames.length === 0) {
+        throw new Error('Nenhuma aba encontrada na planilha.');
+      }
+
+      // Find the right sheet
+      const sheetName = wb.SheetNames.find(n =>
+        n.toLowerCase().includes('ticket') ||
+        n.toLowerCase().includes('base') ||
+        n.toLowerCase().includes('dados')
+      ) || wb.SheetNames[0];
+
+      const ws = wb.Sheets[sheetName];
+      if (!ws) throw new Error('Aba não encontrada: ' + sheetName);
+
+      // raw:true keeps numbers as numbers and dates as Date objects (with cellDates:true)
+      const data = XLSX.utils.sheet_to_json(ws, { defval: '', raw: true });
+
+      if (!data || data.length === 0) {
+        throw new Error('A planilha está vazia ou sem dados.');
+      }
+
+      console.log('[TYR] Planilha carregada:', sheetName, '| Linhas:', data.length);
+      console.log('[TYR] Colunas (amostra):', Object.keys(data[0]).slice(0,8));
+      console.log('[TYR] ID do Ticket[0]:', data[0]['ID do Ticket']);
+      console.log('[TYR] Mês[0]:', data[0]['Mês'], '| Ano[0]:', data[0]['Ano']);
+
+      processData(data);
+      // processData shows its own toast on success
+
+    } catch(err) {
+      console.error('[TYR] Erro na importação:', err);
+      showToast('❌', 'Erro: ' + (err.message || 'Formato inválido'));
+      document.getElementById('mainContent').innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:center;flex:1;padding:40px;">
+          <div style="text-align:center;max-width:360px;">
+            <div style="font-size:40px;margin-bottom:12px;">⚠️</div>
+            <div style="font-size:16px;font-weight:700;color:var(--red-txt);margin-bottom:8px;">Erro ao importar planilha</div>
+            <div style="font-size:13px;color:var(--mu);line-height:1.6;">${err.message || 'Verifique se o arquivo é um .xlsx válido e tente novamente.'}</div>
+            <div style="margin-top:16px;font-size:11px;color:var(--fa);">Abra o console (F12) para ver detalhes técnicos.</div>
+          </div>
+        </div>`;
+      document.getElementById('tbTitle').textContent = 'Erro ao carregar';
+    }
+  };
+
+  // Use ArrayBuffer — more reliable than BinaryString across browsers
+  reader.readAsArrayBuffer(file);
+  this.value = '';
+});
+
+function processData(rows) {
+  try {
+  ALL_TICKETS = [];
+  MONTHS_META = {};
+  MONTHS_ORDER = [];
+
+  let skipped = 0;
+  rows.forEach((row, i) => {
+    const t = normalizeTicket(row, i);
+    if (!t.id || t.id === '' || t.id === 'undefined') { skipped++; return; }
+    ALL_TICKETS.push(t);
+
+    const key = t.anoNum + '-' + String(t.mesNum).padStart(2,'0');
+    if (!MONTHS_META[key]) {
+      MONTHS_META[key] = {
+        key, label: t.mesLabel, year: t.anoNum, month: t.mesNum, tickets: []
+      };
+    }
+    MONTHS_META[key].tickets.push(t);
+  });
+
+  console.log('[TYR] Tickets processados:', ALL_TICKETS.length, '| Ignorados:', skipped, '| Meses:', MONTHS_ORDER.length);
+
+  if (ALL_TICKETS.length === 0) {
+    showToast('❌', 'Nenhum ticket encontrado. Verifique se a coluna "ID do Ticket" existe.');
+    document.getElementById('mainContent').innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:center;flex:1;padding:40px;">
+        <div style="text-align:center;max-width:360px;">
+          <div style="font-size:40px;margin-bottom:12px;">🔍</div>
+          <div style="font-size:16px;font-weight:700;color:var(--amber-txt);margin-bottom:8px;">Nenhum ticket identificado</div>
+          <div style="font-size:13px;color:var(--mu);line-height:1.6;">
+            O arquivo foi lido (${rows.length} linhas), mas não foi possível identificar tickets.<br><br>
+            Certifique-se de que a planilha exportada do Airtable contenha a coluna <strong>"ID do Ticket"</strong>.
+          </div>
+        </div>
+      </div>`;
+    document.getElementById('tbTitle').textContent = 'Sem dados';
+    return;
+  }
+
+  MONTHS_ORDER = Object.keys(MONTHS_META).sort();
+
+  // Show quick confirmation before full render
+  document.getElementById('tbTitle').textContent = `Carregado: ${ALL_TICKETS.length} tickets`;
+  document.getElementById('tbBadge').textContent = MONTHS_ORDER.length + ' meses';
+  document.getElementById('tbBadge').style.display = 'flex';
+  document.getElementById('mainContent').innerHTML = `
+    <div style="padding:20px 24px 0;">
+      <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:12px;">
+        <span style="font-size:22px;">✅</span>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#15803d;">${ALL_TICKETS.length} tickets carregados em ${MONTHS_ORDER.length} meses</div>
+          <div style="font-size:11px;color:#166534;margin-top:2px;">Período: ${MONTHS_ORDER[0]} → ${MONTHS_ORDER[MONTHS_ORDER.length-1]}</div>
+        </div>
+      </div>
+    </div>`;
+
+  buildSidebar();
+
+  // Select most recent month by default
+  const lastKey = MONTHS_ORDER[MONTHS_ORDER.length - 1];
+  selectMonth(lastKey);
+
+  showToast('✅', `${ALL_TICKETS.length} tickets · ${MONTHS_ORDER.length} meses carregados`);
+
+  } catch(err) {
+    console.error('[TYR] processData error:', err);
+    showToast('❌', 'Erro ao processar dados: ' + err.message);
+    document.getElementById('mainContent').innerHTML = `
+      <div style="padding:30px;color:var(--red-txt);">
+        <div style="font-size:16px;font-weight:700;margin-bottom:8px;">⚠️ Erro ao processar planilha</div>
+        <div style="font-size:13px;margin-bottom:12px;">${err.message}</div>
+        <pre style="font-size:10px;background:var(--ln2);padding:12px;border-radius:8px;overflow:auto;color:var(--ink2);">${err.stack}</pre>
+      </div>`;
+  }
+}
+
+function normalizeTicket(row, idx) {
+  const g = k => {
+    const val = row[COL[k]];
+    return val !== undefined && val !== null ? val : '';
+  };
+  const gn = k => {
+    const val = g(k);
+    if (typeof val === 'number') return val;
+    return parseFloat(String(val)) || 0;
+  };
+  const gs = k => String(g(k) || '').trim();
+
+  const id = gs('id');
+  const criado = parseDate(g('criado'));
+  const concluido = parseDate(g('concluido'));
+
+  // Mes/Ano: try the column first, then fall back to date
+  let mesNum = gn('mes');
+  if (!mesNum && criado) mesNum = criado.getMonth() + 1;
+  let anoNum = gn('ano');
+  if (!anoNum && criado) anoNum = criado.getFullYear();
+
+  // If still nothing, try parsing from mesExtenso string e.g. "07º- Julho"
+  if (!mesNum || !anoNum) {
+    const mesAnoStr = gs('mesAno'); // "07º- Julho/2025"
+    const mMatch = mesAnoStr.match(/(\d{4})/);
+    if (mMatch && !anoNum) anoNum = parseInt(mMatch[1]);
+    const numMatch = mesAnoStr.match(/^(\d+)/);
+    if (numMatch && !mesNum) mesNum = parseInt(numMatch[1]);
+  }
+
+  let mesLabel = gs('mesExtenso').replace(/^\d+º-\s*/,'').trim() || mesName(mesNum);
+  let mesAnoLabel = (mesLabel + '/' + anoNum).trim();
+
+  const nivelRaw = String(g('nivel')).trim();
+  let nivelNum = 1;
+  if (nivelRaw.includes('2')) nivelNum = 2;
+  else if (nivelRaw.includes('3')) nivelNum = 3;
+
+  return {
+    _idx: idx,
+    id,
+    catPrincipal: gs('catPrincipal') || 'Outros',
+    subcat:        gs('subcat'),
+    criado, concluido,
+    criadoStr:    formatDate(criado),
+    concluidoStr: formatDate(concluido),
+    solicitante:  gs('solicitante'),
+    empresa:      gs('empresa'),
+    email:        gs('email'),
+    tipoSuporte:  gs('tipoSuporte'),
+    descricao:    gs('descricao').replace(/\\n/g,'\n'),
+    resolucao:    gs('resolucao').replace(/\\n/g,'\n'),
+    nivel:        nivelNum,
+    nivelLabel:   nivelRaw || 'Nível ' + nivelNum,
+    horas:        gn('horas'),
+    diasUteis:    gn('diasUteis'),
+    produto:      gs('produto') || '—',
+    status:       gs('status') || '—',
+    nivelCliente: gs('nivelCliente'),
+    prioridade:   gs('prioridade').toLowerCase(),
+    responsavel:  gs('responsavel'),
+    mesNum, anoNum, mesLabel, mesAnoLabel,
+    atrasado:     gs('atrasado') === 'Finalizado com Atraso',
+    canal:        gs('canal'),
+    avEquipe:     gn('avEquipe') || null,
+    avTempo:      gn('avTempo') || null,
+    avQualidade:  gn('avQualidade') || null,
+    avMedia:      gn('avMedia') || null,
+    avGeral:      gs('avGeral'),
+    semana:       gn('semana'),
+    telefone:     gs('telefone'),
+    numeracao:    gn('numeracao'),
+    tempoPrResp:  gn('tempoPrResp'),
+    ticketEspera: gs('ticketEspera'),
+    registrosEspera: gs('registrosEspera'),
+  };
+}
+
+function parseDate(v) {
+  if (!v) return null;
+  // Already a proper Date object (cellDates:true gives these)
+  if (v instanceof Date) return isNaN(v.getTime()) ? null : v;
+  // Number = Excel serial date
+  if (typeof v === 'number') {
+    // Excel date serial: days since 1900-01-01 (with leap year bug)
+    const d = new Date(Math.round((v - 25569) * 86400 * 1000));
+    return isNaN(d.getTime()) ? null : d;
+  }
+  // String fallback
+  const s = String(v).trim();
+  if (!s || s === '—' || s === 'NaN') return null;
+  // Try ISO and common formats
+  const d = new Date(s);
+  if (!isNaN(d.getTime())) return d;
+  // Try DD/MM/YYYY
+  const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+  if (m) return new Date(parseInt(m[3] < 100 ? '20'+m[3] : m[3]), parseInt(m[2])-1, parseInt(m[1]));
+  return null;
+}
+
+function formatDate(d) {
+  if (!d) return '—';
+  return d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric' });
+}
+
+function formatDateTime(d) {
+  if (!d) return '—';
+  return d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric' }) + ' ' +
+         d.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+}
+
+function mesName(n) {
+  return ['','Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][n] || String(n);
+}
+
+// ── SIDEBAR ──────────────────────────────────────────────────────────
+function buildSidebar() {
+  const nav = document.getElementById('monthNav');
+  nav.innerHTML = '';
+  const total = ALL_TICKETS.length;
+  document.getElementById('allBadge').textContent = total;
+
+  MONTHS_ORDER.forEach(k => {
+    const m = MONTHS_META[k];
+    const btn = document.createElement('button');
+    btn.className = 'month-btn';
+    btn.dataset.key = k;
+    const atrasados = m.tickets.filter(t => t.atrasado).length;
+    const atStr = atrasados > 0 ? `<span style="color:var(--red);font-size:9px;margin-left:3px;">⚠${atrasados}</span>` : '';
+    btn.innerHTML = `
+      <span style="display:flex;align-items:center;gap:5px;">
+        <span class="month-dot"></span>
+        <span>${m.label} <span style="color:rgba(255,255,255,.3);font-size:10px;">${m.year}</span></span>
+      </span>
+      <span style="display:flex;align-items:center;gap:5px;">
+        ${atStr}
+        <span class="mbadge">${m.tickets.length}</span>
+      </span>`;
+    btn.onclick = () => selectMonth(k);
+    nav.appendChild(btn);
+  });
+}
+
+function selectAll() {
+  document.querySelectorAll('.month-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('allBtn').classList.add('active');
+  CURRENT_VIEW = null;
+  renderDashboard(ALL_TICKETS, 'Visão Consolidada', true);
+}
+
+function selectMonth(key) {
+  document.querySelectorAll('.month-btn').forEach(b => b.classList.toggle('active', b.dataset.key === key));
+  document.getElementById('allBtn').classList.remove('active');
+  CURRENT_VIEW = key;
+  const m = MONTHS_META[key];
+  renderDashboard(m.tickets, m.label + ' ' + m.year, false);
+}
+
+// ── MAIN RENDER ──────────────────────────────────────────────────────
+function renderDashboard(tickets, title, isConsolidated) {
+  try {
+    document.getElementById('tbTitle').textContent = title;
+    const badge = document.getElementById('tbBadge');
+    badge.textContent = tickets.length + ' tickets';
+    badge.style.display = 'flex';
+
+    // Show tabs in topbar
+    const tbTabs = document.getElementById('tbTabs');
+    tbTabs.style.display = 'flex';
+    document.getElementById('tbSub').style.marginLeft = '12px';
+
+    const mc = document.getElementById('mainContent');
+    mc.style = '';
+    mc.innerHTML = `
+      <div class="tab-content ${ACTIVE_TAB==='exec'?'active':''}" id="tab-exec"></div>
+      <div class="tab-content ${ACTIVE_TAB==='detalhe'?'active':''}" id="tab-detalhe"></div>
+      <div class="tab-content ${ACTIVE_TAB==='tickets'?'active':''}" id="tab-tickets"></div>
+    `;
+
+    // Sync tab button states
+    ['exec','detalhe','tickets'].forEach(t => {
+      const btn = document.getElementById('tab-btn-'+t);
+      if (btn) btn.classList.toggle('active', t === ACTIVE_TAB);
+    });
+
+    try { renderExecTab(tickets, isConsolidated); }
+    catch(e) {
+      console.error('[TYR] renderExecTab error:', e);
+      document.getElementById('tab-exec').innerHTML = `<div style="padding:20px;color:var(--red-txt);font-size:12px;"><b>Erro:</b> ${e.message}<br><pre style="margin-top:8px;font-size:10px;overflow:auto;">${e.stack}</pre></div>`;
+    }
+    try { renderDetalheTab(tickets); }
+    catch(e) {
+      console.error('[TYR] renderDetalheTab error:', e);
+      document.getElementById('tab-detalhe').innerHTML = `<div style="padding:20px;color:var(--red-txt);font-size:12px;">Erro: ${e.message}</div>`;
+    }
+    try { renderTicketsTab(tickets); }
+    catch(e) {
+      console.error('[TYR] renderTicketsTab error:', e);
+      document.getElementById('tab-tickets').innerHTML = `<div style="padding:20px;color:var(--red-txt);font-size:12px;">Erro: ${e.message}</div>`;
+    }
+
+  } catch(e) {
+    console.error('[TYR] renderDashboard fatal:', e);
+    document.getElementById('mainContent').innerHTML = `<div style="padding:30px;color:var(--red-txt);"><b>Erro fatal:</b> ${e.message}<pre style="font-size:10px;margin-top:8px;">${e.stack}</pre></div>`;
+  }
+}
+
+function switchTab(tab) {
+  ACTIVE_TAB = tab;
+  ['exec','detalhe','tickets'].forEach(t => {
+    const btn = document.getElementById('tab-btn-'+t);
+    if (btn) btn.classList.toggle('active', t === tab);
+    const pane = document.getElementById('tab-'+t);
+    if (pane) pane.classList.toggle('active', t === tab);
+  });
+}
+
+// ── KPI HELPERS ──────────────────────────────────────────────────────
+function calcKPIs(tickets) {
+  const total = tickets.length;
+  const finalizados = tickets.filter(t => t.status === 'FINALIZADO').length;
+  const atrasados = tickets.filter(t => t.atrasado).length; // Finalizado com Atraso (histórico)
+  const emAberto = tickets.filter(t => t.status === 'ATRASADO' || t.status === 'TRIAGEM INICIAL').length;
+  const horasValidas = tickets.filter(t => t.horas > 0);
+  const mediaHoras = horasValidas.length ? (horasValidas.reduce((s,t) => s+t.horas, 0) / horasValidas.length) : 0;
+  const avTodos = tickets.filter(t => t.avMedia > 0);
+  const nps = avTodos.length ? (avTodos.reduce((s,t) => s+t.avMedia, 0) / avTodos.length) : null;
+  const taxaConclusao = total > 0 ? (finalizados/total*100) : 0;
+  const n3 = tickets.filter(t => t.nivel === 3).length;
+  const taxaAtraso = total > 0 ? (atrasados/total*100) : 0;
+  return { total, finalizados, atrasados, emAberto, mediaHoras, nps, taxaConclusao, n3, taxaAtraso };
+}
+
+// ── EXEC TAB ─────────────────────────────────────────────────────────
+function renderExecTab(tickets, isConsolidated) {
+  currentTickets = tickets;
+  const kpi = calcKPIs(tickets);
+  const el = document.getElementById('tab-exec');
+
+  let prevKPI = null;
+  if (CURRENT_VIEW && MONTHS_ORDER.length > 1) {
+    const idx = MONTHS_ORDER.indexOf(CURRENT_VIEW);
+    if (idx > 0) prevKPI = calcKPIs(MONTHS_META[MONTHS_ORDER[idx-1]].tickets);
+  }
+
+  function delta(cur, prev, key, invert=false) {
+    if (!prev) return '';
+    const d = cur[key] - prev[key];
+    if (d === 0) return '<span class="d-fl">→ igual</span>';
+    const pct = prev[key] > 0 ? Math.abs(d/prev[key]*100).toFixed(0) + '%' : '';
+    if ((!invert && d > 0) || (invert && d < 0)) return `<span class="d-up">▲ ${pct || Math.abs(d).toFixed(1)}</span>`;
+    return `<span class="d-dn">▼ ${pct || Math.abs(d).toFixed(1)}</span>`;
+  }
+
+  const trendHTML       = buildTrendChart(tickets, isConsolidated);
+  const alertsHTML      = buildAlerts(tickets, kpi);
+  const catHTML         = buildCatBars(tickets);
+  const prodHTML        = buildProdDonut(tickets);
+  const nivelHTML       = buildNivelBars(tickets);
+  const setorHTML       = buildSetorEsperaCard(tickets);
+  const slaHTML         = buildSLAAnalysis(tickets);
+  const topClientesHTML = buildTopClientes(tickets);
+
+  const npsLabel = kpi.nps !== null
+    ? (kpi.nps >= 4.5 ? '<span class="d-dn">🟢 Excelente</span>'
+      : kpi.nps >= 3  ? '<span class="d-fl">🟡 Bom</span>'
+      : '<span class="d-up">🔴 Atenção</span>')
+    : '<span class="d-fl">Sem avaliações</span>';
+
+  el.innerHTML = `
+  <div class="kpi-row">
+    <div class="kpi k-green" onclick="filterByStatus(null)" style="cursor:pointer;">
+      <div class="kpi-val green">${kpi.total}</div>
+      <div class="kpi-lbl">Total de Tickets</div>
+      <div class="kpi-delta">${delta(kpi,prevKPI,'total')}</div>
+    </div>
+    <div class="kpi k-teal" onclick="filterByStatus('FINALIZADO')" style="cursor:pointer;">
+      <div class="kpi-val teal">${kpi.finalizados}</div>
+      <div class="kpi-lbl">Finalizados</div>
+      <div class="kpi-delta">${kpi.taxaConclusao.toFixed(1)}% do total</div>
+    </div>
+    <div class="kpi k-red" onclick="filterByStatus('ATRASADO')" style="cursor:pointer;">
+      <div class="kpi-val red">${kpi.atrasados}</div>
+      <div class="kpi-lbl">Finalizados c/ Atraso</div>
+      <div class="kpi-delta">${delta(kpi,prevKPI,'atrasados',true)} ${kpi.taxaAtraso.toFixed(1)}% do total</div>
+    </div>
+    <div class="kpi k-amber" onclick="filterByStatus('EM_ABERTO')" style="cursor:pointer;">
+      <div class="kpi-val amber">${kpi.emAberto}</div>
+      <div class="kpi-lbl">Em Aberto</div>
+      <div class="kpi-delta">${kpi.emAberto > 0 ? '<span class="d-up">⚠ Requer atenção</span>' : '<span class="d-dn">✓ Nenhum em aberto</span>'}</div>
+    </div>
+    <div class="kpi k-purple" onclick="openNPSModal(currentTickets)" style="cursor:pointer;">
+      <div class="kpi-val purple">${kpi.nps !== null ? kpi.nps.toFixed(1) + '★' : '—'}</div>
+      <div class="kpi-lbl">NPS Médio</div>
+      <div class="kpi-delta">${npsLabel} <span style="font-size:9px;color:var(--fa);margin-left:4px;">ver ›</span></div>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="row-32">
+      <div class="card">
+        <div class="card-hdr">
+          <div class="card-title">📈 Evolução de Tickets</div>
+          <div class="card-badge">${isConsolidated ? 'Todos os meses' : 'Semanas do mês'}</div>
+        </div>
+        ${trendHTML}
+      </div>
+      <div class="card">
+        <div class="card-hdr"><div class="card-title">🔔 Alertas Inteligentes</div></div>
+        ${alertsHTML}
+      </div>
+    </div>
+
+    <div class="row-3">
+      <div class="card">
+        <div class="card-hdr">
+          <div class="card-title">🏷️ Top Categorias</div>
+          <div class="card-badge">clique para filtrar</div>
+        </div>
+        ${catHTML}
+      </div>
+      <div class="card">
+        <div class="card-hdr"><div class="card-title">⚡ Por Produto</div></div>
+        ${prodHTML}
+      </div>
+      <div class="card">
+        <div class="card-hdr"><div class="card-title">🏆 Top 3 Clientes</div><div class="card-badge">mais tickets</div></div>
+        ${topClientesHTML}
+      </div>
+    </div>
+
+    <div class="row-2">
+      <div class="card">
+        <div class="card-hdr"><div class="card-title">📶 Por Nível</div></div>
+        ${nivelHTML}
+      </div>
+      <div class="card">
+        <div class="card-hdr"><div class="card-title">⏱️ SLA por Nível</div></div>
+        ${slaHTML}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr">
+        <div class="card-title">🏢 Áreas com Registro de Espera</div>
+        <div class="card-badge">clique para filtrar</div>
+      </div>
+      ${setorHTML}
+    </div>
+  </div>`;
+}
+
+// ── TREND CHART ──────────────────────────────────────────────────────
+function buildTrendChart(tickets, isConsolidated) {
+  let groups = [];
+
+  if (isConsolidated) {
+    MONTHS_ORDER.forEach(k => {
+      const m = MONTHS_META[k];
+      const ts = m.tickets;
+      groups.push({ label: m.label.slice(0,3).toUpperCase(), total: ts.length, atrasados: ts.filter(x=>x.atrasado).length, key: k });
+    });
+  } else {
+    const byWeek = {};
+    tickets.forEach(t => {
+      const w = t.semana || 1;
+      if (!byWeek[w]) byWeek[w] = { label: 'S'+w, total:0, atrasados:0, key:w };
+      byWeek[w].total++;
+      if (t.atrasado) byWeek[w].atrasados++;
+    });
+    groups = Object.values(byWeek).sort((a,b) => a.key - b.key);
+  }
+
+  if (!groups.length) return '<div style="color:var(--fa);font-size:12px;text-align:center;padding:20px">Sem dados</div>';
+
+  const maxTotal = Math.max(...groups.map(g => g.total), 1);
+  const headerLabel = isConsolidated ? 'MESES — CLIQUE PARA FILTRAR' : 'SEMANAS — CLIQUE PARA FILTRAR';
+
+  const cards = groups.map(g => {
+    const isActive = CURRENT_VIEW === g.key;
+    const barPct = Math.max(4, Math.round(g.total / maxTotal * 100));
+    // Both consolidated months AND weekly cards are clickable
+    const onclick = isConsolidated
+      ? `selectMonth('${g.key}')`
+      : `filterByWeek(${g.key})`;
+    const bg = isActive ? 'var(--navy2)' : 'var(--wh)';
+    const border = isActive ? 'var(--navy2)' : 'var(--ln)';
+    const labelColor = isActive ? 'rgba(255,255,255,.45)' : 'var(--mu)';
+    const numColor = isActive ? '#fff' : 'var(--ink)';
+    const atrColor = isActive ? 'rgba(239,68,68,.85)' : 'var(--red-txt)';
+    const emptyColor = isActive ? 'rgba(255,255,255,.28)' : 'var(--fa)';
+    const trackBg = isActive ? 'rgba(255,255,255,.12)' : 'var(--ln2)';
+
+    return `<div onclick="${onclick}" style="flex:1;min-width:60px;background:${bg};border:1px solid ${border};border-radius:10px;padding:12px 14px;cursor:pointer;transition:all .15s;box-shadow:var(--sh);"
+      onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='var(--sh2)'"
+      onmouseout="this.style.transform='';this.style.boxShadow='var(--sh)'">
+      <div style="font-size:9px;font-weight:700;letter-spacing:.1em;color:${labelColor};margin-bottom:5px;text-transform:uppercase;">${g.label}</div>
+      <div style="font-size:28px;font-weight:800;line-height:1.1;color:${numColor};font-family:'DM Mono',monospace;">${g.total}</div>
+      <div style="font-size:10px;margin-top:4px;font-weight:600;color:${g.atrasados>0?atrColor:emptyColor};">${g.atrasados>0?g.atrasados+' atr.':'—'}</div>
+      <div style="margin-top:8px;height:3px;background:${trackBg};border-radius:2px;overflow:hidden;">
+        <div style="height:100%;background:var(--g);border-radius:2px;width:${barPct}%;"></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  return `
+  <div style="font-size:8.5px;font-weight:700;letter-spacing:.12em;color:var(--mu);margin-bottom:10px;text-transform:uppercase;">${headerLabel}</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;">${cards}</div>`;
+}
+// ── ALERTS ───────────────────────────────────────────────────────────
+function buildAlerts(tickets, kpi) {
+  const alerts = [];
+  const total = kpi.total;
+  if (!total) return '<div style="color:var(--fa);font-size:12px;text-align:center;padding:16px">Sem dados para análise</div>';
+
+  // Taxa de atraso alta
+  if (kpi.taxaAtraso >= 20) {
+    alerts.push({ cls:'a-red', ico:'🚨', title:`Taxa de atraso crítica: ${kpi.taxaAtraso.toFixed(1)}%`, sub:`${kpi.atrasados} tickets foram finalizados com atraso no período.` });
+  } else if (kpi.taxaAtraso >= 10) {
+    alerts.push({ cls:'a-amber', ico:'⚠️', title:`Taxa de atraso elevada: ${kpi.taxaAtraso.toFixed(1)}%`, sub:`Monitorar: ${kpi.atrasados} tickets atrasados.` });
+  } else {
+    alerts.push({ cls:'a-green', ico:'✅', title:`Taxa de atraso controlada: ${kpi.taxaAtraso.toFixed(1)}%`, sub:`Bom desempenho no cumprimento de SLA.` });
+  }
+
+  // Categoria dominante
+  const byCat = groupBy(tickets, 'catPrincipal');
+  const topCat = Object.entries(byCat).sort((a,b) => b[1].length - a[1].length)[0];
+  if (topCat) {
+    const pct = (topCat[1].length/total*100).toFixed(1);
+    const cls = pct >= 25 ? 'a-amber' : 'a-blue';
+    alerts.push({ cls, ico:'📌', title:`"${topCat[0]}" lidera com ${pct}%`, sub:`${topCat[1].length} tickets nesta categoria no período.` });
+  }
+
+  // Concentração de responsável
+  const byResp = groupBy(tickets, 'responsavel');
+  const topResp = Object.entries(byResp).sort((a,b) => b[1].length - a[1].length)[0];
+  if (topResp) {
+    const pct = (topResp[1].length/total*100).toFixed(1);
+    const firstName = topResp[0].split(' ')[0];
+    if (parseFloat(pct) >= 60) {
+      alerts.push({ cls:'a-amber', ico:'👤', title:`Alta concentração: ${firstName} (${pct}%)`, sub:`${topResp[1].length} de ${total} tickets atribuídos. Avaliar distribuição.` });
+    }
+  }
+
+  // N3 elevado
+  if (kpi.n3 / total >= 0.3) {
+    alerts.push({ cls:'a-red', ico:'🔴', title:`${(kpi.n3/total*100).toFixed(0)}% dos tickets são Nível 3`, sub:`Tickets complexos em alta. Verificar causa-raiz.` });
+  }
+
+  // NPS
+  if (kpi.nps !== null && kpi.nps < 3) {
+    alerts.push({ cls:'a-red', ico:'😟', title:`NPS abaixo de 3.0 — Avaliação negativa`, sub:`Média atual: ${kpi.nps.toFixed(1)}. Revisar processos de atendimento.` });
+  }
+
+  // Produto sem produto informado
+  const semProduto = tickets.filter(t => !t.produto || t.produto === '—').length;
+  if (semProduto > total * 0.3) {
+    alerts.push({ cls:'a-amber', ico:'📋', title:`${semProduto} tickets sem produto identificado`, sub:`Dado importante para segmentação. Verificar preenchimento.` });
+  }
+
+  if (!alerts.length) {
+    alerts.push({ cls:'a-green', ico:'🎉', title:'Tudo dentro do esperado!', sub:'Sem alertas críticos para este período.' });
+  }
+
+  return alerts.slice(0,5).map(a => `
+    <div class="alert-item ${a.cls}">
+      <div class="alert-ico">${a.ico}</div>
+      <div class="alert-body">
+        <div class="alert-title">${a.title}</div>
+        <div class="alert-sub">${a.sub}</div>
+      </div>
+    </div>`).join('');
+}
+
+// ── CATEGORY BARS ─────────────────────────────────────────────────────
+function buildCatBars(tickets) {
+  const byCat = groupBy(tickets, 'catPrincipal');
+  const sorted = Object.entries(byCat).sort((a,b) => b[1].length - a[1].length).slice(0,10);
+  const max = sorted[0]?.[1].length || 1;
+
+  return sorted.map(([cat, ts], i) => `
+    <div class="rank-row" onclick="filterByCategory('${escapeSingle(cat)}')">
+      <div class="rank-num">${i+1}</div>
+      <div class="rank-label" title="${cat}">${cat}</div>
+      <div class="rank-bar-wrap">
+        <div class="rank-bar" style="width:${(ts.length/max*100).toFixed(0)}%;background:${CAT_COLORS[i%CAT_COLORS.length]};"></div>
+      </div>
+      <div class="rank-count">${ts.length}</div>
+    </div>`).join('');
+}
+
+// ── PRODUCT DONUT ─────────────────────────────────────────────────────
+function buildProdDonut(tickets) {
+  const byProd = groupBy(tickets, 'produto');
+  const data = Object.entries(byProd).filter(([k]) => k && k !== '—').sort((a,b) => b[1].length - a[1].length);
+  const total = tickets.length || 1;
+  const colors = ['#3b82f6','#1ec97e','#f59e0b','#8b5cf6','#ef4444','#0891b2'];
+
+  if (!data.length) return '<div style="color:var(--fa);font-size:12px;text-align:center;padding:20px">Sem dados</div>';
+
+  let angle = 0;
+  const slices = data.map(([k, ts], i) => {
+    const pct = ts.length / total;
+    const a1 = angle, a2 = angle + pct * 360;
+    angle = a2;
+    return { label: k, count: ts.length, pct, a1, a2, color: colors[i % colors.length] };
+  });
+
+  const S = 200, cx = S/2, cy = S/2, r = S/2 - 8, ri = r * 0.52;
+  const paths = slices.map(s => {
+    const a1r = (s.a1-90)*Math.PI/180, a2r = (s.a2-90)*Math.PI/180;
+    const x1=cx+r*Math.cos(a1r), y1=cy+r*Math.sin(a1r);
+    const x2=cx+r*Math.cos(a2r), y2=cy+r*Math.sin(a2r);
+    const xi1=cx+ri*Math.cos(a1r), yi1=cy+ri*Math.sin(a1r);
+    const xi2=cx+ri*Math.cos(a2r), yi2=cy+ri*Math.sin(a2r);
+    const large = s.pct > 0.5 ? 1 : 0;
+    return `<path d="M${x1.toFixed(1)},${y1.toFixed(1)} A${r},${r} 0 ${large},1 ${x2.toFixed(1)},${y2.toFixed(1)} L${xi2.toFixed(1)},${yi2.toFixed(1)} A${ri},${ri} 0 ${large},0 ${xi1.toFixed(1)},${yi1.toFixed(1)} Z" fill="${s.color}" opacity=".92" style="cursor:pointer" onclick="filterByProduct('${escapeSingle(s.label)}')" ><title>${s.label}: ${s.count}</title></path>`;
+  }).join('');
+
+  const legend = slices.map(s => `
+    <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--ln2);cursor:pointer;" onclick="filterByProduct('${escapeSingle(s.label)}')">
+      <div style="width:10px;height:10px;border-radius:50%;background:${s.color};flex-shrink:0;"></div>
+      <span style="flex:1;font-size:12px;color:var(--ink2);font-weight:500;">${s.label}</span>
+      <span style="font-family:'DM Mono',monospace;font-size:12px;font-weight:700;color:var(--ink2);">${s.count}</span>
+      <span style="font-size:11px;color:var(--fa);min-width:38px;text-align:right;">(${(s.pct*100).toFixed(0)}%)</span>
+    </div>`).join('');
+
+  return `
+  <div style="display:flex;flex-direction:column;align-items:center;gap:12px;">
+    <svg viewBox="0 0 ${S} ${S}" xmlns="http://www.w3.org/2000/svg" style="width:min(100%,200px);height:auto;display:block;">
+      ${paths}
+      <circle cx="${cx}" cy="${cy}" r="${ri-2}" fill="white"/>
+      <text x="${cx}" y="${cy-7}" text-anchor="middle" font-size="26" font-weight="800" fill="${colors[0]}" font-family="DM Mono,monospace">${total}</text>
+      <text x="${cx}" y="${cy+12}" text-anchor="middle" font-size="9.5" fill="#94a3b8" font-family="DM Sans,sans-serif" letter-spacing="0.08em">TICKETS</text>
+    </svg>
+    <div style="width:100%;">${legend}</div>
+  </div>`;
+}
+
+// ── NIVEL BARS ────────────────────────────────────────────────────────
+function buildNivelBars(tickets) {
+  const niveis = [1,2,3];
+  const total = tickets.length || 1;
+  const colors = { 1:'var(--red)', 2:'var(--amber)', 3:'var(--blue)' };
+  const labels = { 1:'Nível 1', 2:'Nível 2', 3:'Nível 3' };
+  const sublabels = { 1:'Simples', 2:'Médio', 3:'Complexo' };
+  const cls = { 1:'n1', 2:'n2', 3:'n3' };
+
+  const html = niveis.map(n => {
+    const ts = tickets.filter(t => t.nivel === n);
+    const atrasados = ts.filter(t => t.atrasado).length;
+    const emAberto = ts.filter(t => t.status === 'ATRASADO' || t.status === 'TRIAGEM INICIAL').length;
+    const mediaH = ts.filter(t => t.horas > 0);
+    const avgH = mediaH.length ? (mediaH.reduce((s,t) => s+t.horas, 0)/mediaH.length).toFixed(1) : '—';
+    const pct = total > 0 ? (ts.length/total*100).toFixed(1) : '0.0';
+    return `
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 5px;border-bottom:1px solid var(--ln2);cursor:pointer;border-radius:5px;transition:background .1s;"
+         onmouseover="this.style.background='var(--gt)'" onmouseout="this.style.background=''"
+         onclick="filterByNivel(${n})">
+      <span class="nbadge ${cls[n]}" style="min-width:58px;justify-content:center;">${labels[n]}</span>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
+          <span style="font-size:12px;font-weight:500;color:var(--ink2);">${sublabels[n]}</span>
+          ${emAberto > 0 ? `<span style="font-size:9.5px;font-weight:700;color:var(--amber-txt);background:var(--amber-bg);padding:1px 6px;border-radius:99px;">⚠ ${emAberto} aberto</span>` : ''}
+        </div>
+        <div style="height:4px;background:var(--ln2);border-radius:2px;overflow:hidden;">
+          <div style="height:100%;background:${colors[n]};border-radius:2px;width:${pct}%;transition:width .5s;"></div>
+        </div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;">
+        <div style="font-size:16px;font-weight:800;color:var(--ink);font-family:'DM Mono',monospace;line-height:1;">${ts.length}</div>
+        <div style="font-size:10.5px;font-weight:700;color:${colors[n]};">${pct}%</div>
+      </div>
+    </div>
+    <div style="font-size:10px;color:var(--fa);padding:0 0 4px 73px;margin-top:-2px;">
+      Média: ${avgH}h · Finalizados c/ atraso: ${atrasados}
+    </div>`;
+  }).join('');
+
+  return html;
+}
+
+// ── TOP CLIENTES ─────────────────────────────────────────────────────
+function buildTopClientes(tickets) {
+  const byEmpresa = {};
+  tickets.forEach(t => {
+    const e = t.empresa || '—';
+    if (!byEmpresa[e]) byEmpresa[e] = { total:0, atrasados:0, emAberto:0, niveis:{1:0,2:0,3:0}, cats:[] };
+    byEmpresa[e].total++;
+    if (t.atrasado) byEmpresa[e].atrasados++;
+    if (t.status === 'ATRASADO' || t.status === 'TRIAGEM INICIAL') byEmpresa[e].emAberto++;
+    byEmpresa[e].niveis[t.nivel]++;
+    byEmpresa[e].cats.push(t.catPrincipal);
+  });
+
+  const sorted = Object.entries(byEmpresa).sort((a,b) => b[1].total - a[1].total).slice(0,3);
+  if (!sorted.length) return '<div style="color:var(--fa);font-size:12px;text-align:center;padding:20px">Sem dados</div>';
+
+  const medals = ['🥇','🥈','🥉'];
+  const colors = ['#f59e0b','#94a3b8','#b45309'];
+
+  return sorted.map(([empresa, data], idx) => {
+    const initials = empresa.split(' ').filter(w=>w.length>2).map(w=>w[0]).join('').slice(0,2).toUpperCase() || empresa.slice(0,2).toUpperCase();
+    const topCat = Object.entries(
+      data.cats.reduce((a,c)=>{a[c]=(a[c]||0)+1;return a;},{})
+    ).sort((a,b)=>b[1]-a[1])[0];
+    return `
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 8px;border-radius:10px;cursor:pointer;transition:background .1s;border-bottom:${idx<2?'1px solid var(--ln2)':'none'};"
+         onmouseover="this.style.background='var(--gt)'" onmouseout="this.style.background=''"
+         onclick="filterByEmpresa('${escapeSingle(empresa)}')">
+      <div style="width:38px;height:38px;border-radius:50%;background:${colors[idx]}22;border:2px solid ${colors[idx]}44;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <span style="font-size:14px;">${medals[idx]}</span>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:12.5px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${empresa}</div>
+        <div style="font-size:10.5px;color:var(--fa);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${topCat ? topCat[0] : '—'}</div>
+      </div>
+      <div style="flex-shrink:0;text-align:right;">
+        <div style="font-size:20px;font-weight:800;color:${colors[idx]};font-family:'DM Mono',monospace;line-height:1;">${data.total}</div>
+        ${data.emAberto>0 ? `<div style="font-size:9.5px;font-weight:700;color:var(--amber-txt);">⚠ ${data.emAberto} aberto</div>` : `<div style="font-size:9.5px;color:var(--fa);">tickets</div>`}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── RESP TABLE ────────────────────────────────────────────────────────
+function buildRespTable(tickets) {
+  const byResp = {};
+  tickets.forEach(t => {
+    const names = t.responsavel.split(',').map(n => n.trim()).filter(Boolean);
+    names.forEach(n => {
+      if (!byResp[n]) byResp[n] = { tickets:[], atrasados:0, horas:0, av:[] };
+      byResp[n].tickets.push(t);
+      if (t.atrasado) byResp[n].atrasados++;
+      if (t.horas > 0) byResp[n].horas += t.horas;
+      if (t.avMedia > 0) byResp[n].av.push(t.avMedia);
+    });
+  });
+
+  const sorted = Object.entries(byResp).sort((a,b) => b[1].tickets.length - a[1].tickets.length);
+  const maxT = sorted[0]?.[1].tickets.length || 1;
+
+  if (!sorted.length) return '<div style="color:var(--fa);font-size:12px;text-align:center;padding:16px">Sem dados</div>';
+
+  const rows = sorted.map(([name, data]) => {
+    const initials = name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    const avg = data.av.length ? (data.av.reduce((a,b)=>a+b,0)/data.av.length).toFixed(1) : '—';
+    const avgH = data.tickets.length ? (data.horas / data.tickets.filter(t=>t.horas>0).length || 0).toFixed(1) : '—';
+    const pct = (data.tickets.length/maxT*100).toFixed(0);
+    const taxaAtr = (data.atrasados/data.tickets.length*100).toFixed(0);
+    const atrColor = parseFloat(taxaAtr) > 20 ? 'var(--red-txt)' : parseFloat(taxaAtr) > 10 ? 'var(--amber-txt)' : 'var(--g4)';
+    return `
+    <tr onclick="filterByResp('${escapeSingle(name)}')">
+      <td><div style="display:flex;align-items:center;">
+        <div class="avatar">${initials}</div>
+        <span style="font-size:12px;font-weight:600;color:var(--ink);">${name.split(' ').slice(0,2).join(' ')}</span>
+      </div></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div style="flex:1;height:4px;background:var(--ln2);border-radius:2px;min-width:40px;">
+            <div style="height:100%;background:var(--g);border-radius:2px;width:${pct}%;"></div>
+          </div>
+          <span style="font-family:'DM Mono',monospace;font-size:11px;font-weight:700;">${data.tickets.length}</span>
+        </div>
+      </td>
+      <td><span style="font-family:'DM Mono',monospace;font-size:11px;">${avgH}h</span></td>
+      <td><span style="font-size:11px;font-weight:700;color:${atrColor};">${data.atrasados} (${taxaAtr}%)</span></td>
+      <td><span style="font-family:'DM Mono',monospace;font-size:11px;">${avg !== '—' ? avg+'★' : '—'}</span></td>
+    </tr>`;
+  }).join('');
+
+  return `<table class="resp-table">
+    <thead><tr>
+      <th>Responsável</th><th>Tickets</th><th>Média SLA</th><th>Atrasados</th><th>NPS</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+// ── SLA ANALYSIS ──────────────────────────────────────────────────────
+function buildSLAAnalysis(tickets) {
+  const niveis = [
+    { n:1, label:'Nível 1', color:'var(--red)', metaH:8 },
+    { n:2, label:'Nível 2', color:'var(--amber)', metaH:16 },
+    { n:3, label:'Nível 3', color:'var(--blue)', metaH:40 },
+  ];
+
+  const rows = niveis.map(({ n, label, color, metaH }) => {
+    const ts = tickets.filter(t => t.nivel === n);
+    if (!ts.length) return `<div class="sla-bar-row"><span class="nbadge n${n}">${label}</span><span style="font-size:11px;color:var(--fa);margin-left:8px;">Sem dados</span></div>`;
+    const horasTs = ts.filter(t => t.horas > 0);
+    const avgH = horasTs.length ? horasTs.reduce((s,t)=>s+t.horas,0)/horasTs.length : 0;
+    const dentroSLA = ts.filter(t => t.diasUteis <= n).length;
+    const pctSLA = (dentroSLA/ts.length*100).toFixed(0);
+    const mediaD = (ts.reduce((s,t)=>s+t.diasUteis,0)/ts.length).toFixed(1);
+    const maxH = 50;
+    const barW = Math.min(avgH/maxH*100, 100).toFixed(0);
+    const slaOk = parseFloat(pctSLA) >= 80;
+    return `
+    <div class="sla-bar-row">
+      <span class="nbadge n${n}" style="min-width:52px;">${label}</span>
+      <div style="flex:1;margin:0 8px;">
+        <div style="font-size:10.5px;color:var(--ink2);margin-bottom:3px;">Média: <b>${avgH.toFixed(1)}h</b> · Média dias: <b>${mediaD}d</b></div>
+        <div style="height:5px;background:var(--ln2);border-radius:3px;overflow:hidden;">
+          <div style="height:100%;background:${color};border-radius:3px;width:${barW}%;transition:width .5s;"></div>
+        </div>
+      </div>
+      <div style="text-align:right;min-width:70px;">
+        <div style="font-size:11px;font-weight:700;color:${slaOk?'var(--g4)':'var(--red-txt)'};">${pctSLA}% no prazo</div>
+        <div style="font-size:9.5px;color:var(--fa);">${dentroSLA}/${ts.length}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  return rows;
+}
+
+// ── DETALHE TAB ───────────────────────────────────────────────────────
+function renderDetalheTab(tickets) {
+  const el = document.getElementById('tab-detalhe');
+
+  const catHTML = buildDrilldown(tickets);
+  const crossHTML = buildCrossTable(tickets);
+  const nivelClienteHTML = buildNivelClienteAnalysis(tickets);
+  const canalHTML = buildCanalAnalysis(tickets);
+
+  el.innerHTML = `<div class="content">
+    <div class="row-2">
+      <div class="card">
+        <div class="card-hdr">
+          <div class="card-title">🔍 Drilldown — Categorias e Subcategorias</div>
+          <div class="card-badge">clique para expandir</div>
+        </div>
+        <div class="cat-list" id="catList">${catHTML}</div>
+      </div>
+      <div class="card">
+        <div class="card-hdr">
+          <div class="card-title">📊 Produto × Categoria</div>
+        </div>
+        ${crossHTML}
+      </div>
+    </div>
+    <div class="row-2">
+      <div class="card">
+        <div class="card-hdr">
+          <div class="card-title">🏆 Nível do Cliente</div>
+        </div>
+        ${nivelClienteHTML}
+      </div>
+      <div class="card">
+        <div class="card-hdr">
+          <div class="card-title">📡 Canal de Atendimento</div>
+        </div>
+        ${canalHTML}
+      </div>
+    </div>
+  </div>`;
+}
+
+function buildDrilldown(tickets) {
+  const byCat = groupBy(tickets, 'catPrincipal');
+  const sorted = Object.entries(byCat).sort((a,b) => b[1].length - a[1].length);
+  const total = tickets.length || 1;
+
+  return sorted.map(([cat, ts], ci) => {
+    const pct = (ts.length/total*100).toFixed(0);
+    const color = CAT_COLORS[ci % CAT_COLORS.length];
+    const atrasados = ts.filter(t => t.atrasado).length;
+
+    const bySub = groupBy(ts, 'subcat');
+    const subSorted = Object.entries(bySub).sort((a,b) => b[1].length - a[1].length);
+    const maxSub = subSorted[0]?.[1].length || 1;
+
+    const subcats = subSorted.map(([sub, sts]) => {
+      if (!sub) return '';
+      return `
+      <div class="subcat-row" onclick="filterByCatSub('${escapeSingle(cat)}','${escapeSingle(sub)}')">
+        <div class="subcat-name">${sub}</div>
+        <div class="subcat-bar-wrap"><div class="subcat-bar" style="width:${(sts.length/maxSub*100).toFixed(0)}%;"></div></div>
+        <div class="subcat-count">${sts.length}</div>
+      </div>`;
+    }).join('');
+
+    return `
+    <div class="cat-card" id="catCard${ci}">
+      <div class="cat-hdr" onclick="toggleCat(${ci})">
+        <div class="cat-color" style="background:${color}"></div>
+        <div class="cat-name">${cat}</div>
+        ${atrasados > 0 ? `<span style="font-size:9.5px;color:var(--red-txt);background:var(--red-bg);padding:2px 7px;border-radius:99px;margin-right:4px;">⚠ ${atrasados} atrasados</span>` : ''}
+        <div class="cat-pct-bar"><div class="cat-pct-fill" style="width:${pct}%;background:${color};"></div></div>
+        <div class="cat-badge">${ts.length}</div>
+        <div class="cat-chevron">›</div>
+      </div>
+      <div class="cat-body">
+        <div class="subcat-list">${subcats || '<div style="padding:8px;color:var(--fa);font-size:11.5px;">Sem subcategorias</div>'}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleCat(idx) {
+  const card = document.getElementById('catCard'+idx);
+  card.classList.toggle('open');
+}
+
+function buildCrossTable(tickets) {
+  const products = [...new Set(tickets.map(t=>t.produto).filter(p => p && p !== '—'))].sort();
+  const cats = Object.entries(groupBy(tickets, 'catPrincipal')).sort((a,b)=>b[1].length-a[1].length).slice(0,8);
+
+  if (!cats.length) return '<div style="color:var(--fa);font-size:12px;text-align:center;padding:20px">Sem dados</div>';
+
+  const headers = ['Categoria', ...products, 'Total'].map(h => `<th>${h}</th>`).join('');
+  const rows = cats.map(([cat, ts]) => {
+    const tds = products.map(p => {
+      const count = ts.filter(t => t.produto === p).length;
+      return `<td><span style="font-family:'DM Mono',monospace;font-size:11px;">${count || '—'}</span></td>`;
+    }).join('');
+    return `<tr onclick="filterByCategory('${escapeSingle(cat)}')">
+      <td><span style="font-size:11px;font-weight:600;color:var(--ink);">${cat}</span></td>
+      ${tds}
+      <td><span style="font-family:'DM Mono',monospace;font-size:11px;font-weight:700;color:var(--g2);">${ts.length}</span></td>
+    </tr>`;
+  }).join('');
+
+  // Total row
+  const totals = products.map(p => {
+    const c = tickets.filter(t=>t.produto===p).length;
+    return `<td><b style="font-family:'DM Mono',monospace;font-size:11px;">${c}</b></td>`;
+  }).join('');
+
+  return `<div style="overflow-x:auto;"><table class="cross-table">
+    <thead><tr>${headers}</tr></thead>
+    <tbody>${rows}
+    <tr class="tr-total">
+      <td>Total</td>${totals}
+      <td><b style="font-family:'DM Mono',monospace;">${tickets.length}</b></td>
+    </tr>
+    </tbody>
+  </table></div>`;
+}
+
+function buildNivelClienteAnalysis(tickets) {
+  const nivelMap = {
+    'Bronze': { cls:'nc-bronze', icon:'🥉' },
+    'Prata':  { cls:'nc-prata',  icon:'🥈' },
+    'Ouro':   { cls:'nc-ouro',   icon:'🥇' },
+    'Diamante':{ cls:'nc-diamante',icon:'💎' },
+  };
+  const byNC = groupBy(tickets.filter(t=>t.nivelCliente), 'nivelCliente');
+  const sorted = Object.entries(byNC).sort((a,b) => b[1].length - a[1].length);
+  const max = sorted[0]?.[1].length || 1;
+  const total = tickets.length || 1;
+
+  return sorted.map(([nc, ts]) => {
+    const nm = nivelMap[nc] || { cls:'nc-bronze', icon:'👤' };
+    const atrasados = ts.filter(t=>t.atrasado).length;
+    const avgAv = ts.filter(t=>t.avMedia>0);
+    const nps = avgAv.length ? (avgAv.reduce((s,t)=>s+t.avMedia,0)/avgAv.length).toFixed(1) : '—';
+    const pct = (ts.length/total*100).toFixed(0);
+    return `
+    <div class="rank-row">
+      <span class="nc-pill ${nm.cls}">${nm.icon} ${nc}</span>
+      <div class="rank-bar-wrap" style="width:80px;">
+        <div class="rank-bar" style="width:${(ts.length/max*100).toFixed(0)}%;background:var(--g);"></div>
+      </div>
+      <div class="rank-count">${ts.length} (${pct}%)</div>
+      <div style="font-size:10px;color:var(--fa);margin-left:8px;">${atrasados > 0 ? `<span style="color:var(--red-txt);">⚠${atrasados}</span>` : '✓'} · ★${nps}</div>
+    </div>`;
+  }).join('') || '<div style="color:var(--fa);font-size:12px;text-align:center;padding:20px">Sem dados</div>';
+}
+
+function buildCanalAnalysis(tickets) {
+  const byCan = groupBy(tickets.filter(t=>t.canal), 'canal');
+  const sorted = Object.entries(byCan).sort((a,b) => b[1].length - a[1].length);
+  const max = sorted[0]?.[1].length || 1;
+  const total = tickets.length || 1;
+  const icons = { 'E-mail':'📧', 'WhatsApp':'💬', 'Ligação telefônica':'📞' };
+
+  return sorted.map(([canal, ts]) => {
+    const icon = icons[canal] || '📱';
+    const pct = (ts.length/total*100).toFixed(1);
+    const atrasados = ts.filter(t=>t.atrasado).length;
+    const avgH = ts.filter(t=>t.horas>0);
+    const mediaH = avgH.length ? (avgH.reduce((s,t)=>s+t.horas,0)/avgH.length).toFixed(1) : '—';
+    return `
+    <div class="rank-row" style="padding:6px 8px;">
+      <div style="font-size:16px;flex-shrink:0;">${icon}</div>
+      <div class="rank-label" style="font-weight:600;color:var(--ink);">${canal}</div>
+      <div class="rank-bar-wrap">
+        <div class="rank-bar" style="width:${(ts.length/max*100).toFixed(0)}%;background:var(--blue);"></div>
+      </div>
+      <div class="rank-count">${ts.length}</div>
+      <div style="font-size:10px;color:var(--fa);margin-left:8px;white-space:nowrap;">${pct}% · ${mediaH}h avg</div>
+    </div>`;
+  }).join('') || '<div style="color:var(--fa);font-size:12px;text-align:center;padding:20px">Sem dados</div>';
+}
+
+// ── TICKETS TAB ───────────────────────────────────────────────────────
+
+// ── STATUS PILL HELPER ────────────────────────────────────────────────
+function statusPill(t) {
+  // Status real do ticket
+  if (t.status === 'FINALIZADO') {
+    if (t.atrasado) return '<span class="spill s-atr">⚠ C/ Atraso</span>';
+    return '<span class="spill s-fin">✓ Finalizado</span>';
+  }
+  if (t.status === 'ATRASADO') return '<span class="spill" style="background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;">⏰ Em Aberto</span>';
+  if (t.status === 'TRIAGEM INICIAL') return '<span class="spill s-tri">↻ Triagem</span>';
+  return `<span class="spill s-tri">↻ ${t.status||'—'}</span>`;
+}
+
+function renderTicketsTab(tickets) {
+  const el = document.getElementById('tab-tickets');
+  CURRENT_PAGE = 1;
+
+  const months = [...new Set(ALL_TICKETS.map(t => t.mesAnoLabel))].sort();
+  const cats    = [...new Set(ALL_TICKETS.map(t => t.catPrincipal).filter(Boolean))].sort();
+  const resps   = [...new Set(ALL_TICKETS.map(t => t.responsavel).filter(Boolean))].sort();
+  const products= [...new Set(ALL_TICKETS.map(t => t.produto).filter(p => p && p !== '—'))].sort();
+
+  const monthOpts = months.map(m => `<option value="${m}">${m}</option>`).join('');
+  const catOpts   = cats.map(c => `<option value="${c}">${c}</option>`).join('');
+  const respOpts  = resps.map(r => `<option value="${r}">${r.split(' ').slice(0,2).join(' ')}</option>`).join('');
+  const prodOpts  = products.map(p => `<option value="${p}">${p}</option>`).join('');
+
+  el.innerHTML = `<div class="tickets-section">
+    <div class="filters-bar" id="filtersBar">
+      <div class="f-group">
+        <span class="f-lbl">Mês</span>
+        <select class="f-select" id="fMes" onchange="applyFilters()">
+          <option value="">Todos</option>${monthOpts}
+        </select>
+      </div>
+      <div class="f-group">
+        <span class="f-lbl">Produto</span>
+        <select class="f-select" id="fProd" onchange="applyFilters()">
+          <option value="">Todos</option>${prodOpts}
+        </select>
+      </div>
+      <div class="f-group">
+        <span class="f-lbl">Responsável</span>
+        <select class="f-select" id="fResp" onchange="applyFilters()">
+          <option value="">Todos</option>${respOpts}
+        </select>
+      </div>
+      <div class="f-group">
+        <span class="f-lbl">Status</span>
+        <select class="f-select" id="fStatus" onchange="applyFilters()">
+          <option value="">Todos</option>
+          <option value="FINALIZADO">Finalizado</option>
+          <option value="ATRASADO">Finalizado c/ Atraso</option>
+          <option value="EM_ABERTO">Em Aberto</option>
+          <option value="TRIAGEM INICIAL">Triagem</option>
+        </select>
+      </div>
+      <div class="f-group">
+        <span class="f-lbl">Nível</span>
+        <select class="f-select" id="fNivel" onchange="applyFilters()">
+          <option value="">Todos</option>
+          <option value="1">Nível 1</option>
+          <option value="2">Nível 2</option>
+          <option value="3">Nível 3</option>
+        </select>
+      </div>
+      <div class="f-group">
+        <span class="f-lbl">Categoria</span>
+        <select class="f-select" id="fCat" onchange="applyFilters()">
+          <option value="">Todas</option>${catOpts}
+        </select>
+      </div>
+      <input type="search" class="f-search" id="fBusca" placeholder="🔍 Buscar empresa, ID…" oninput="applyFilters()">
+      <div class="f-count" id="fCount"></div>
+      <button class="f-reset" onclick="resetFilters()">✕ Limpar</button>
+    </div>
+    <div class="tbl-wrap">
+      <div class="tbl-scroll" id="tblScroll"></div>
+      <div class="tbl-footer" id="tblFooter"></div>
+    </div>
+  </div>`;
+
+  applyFilters();
+}
+
+function getFilteredTickets() {
+  const mes     = document.getElementById('fMes')?.value    || '';
+  const prod    = document.getElementById('fProd')?.value   || '';
+  const resp    = document.getElementById('fResp')?.value   || '';
+  const status  = document.getElementById('fStatus')?.value || '';
+  const nivel   = document.getElementById('fNivel')?.value  || '';
+  const cat     = document.getElementById('fCat')?.value    || '';
+  const busca   = (document.getElementById('fBusca')?.value || '').toLowerCase();
+
+  const source = CURRENT_VIEW ? MONTHS_META[CURRENT_VIEW].tickets : ALL_TICKETS;
+
+  return source.filter(t => {
+    if (mes    && t.mesAnoLabel !== mes) return false;
+    if (prod   && t.produto !== prod)    return false;
+    if (resp   && !t.responsavel.includes(resp)) return false;
+    if (status === 'ATRASADO' && !t.atrasado) return false;
+    if (status === 'EM_ABERTO' && !(t.status === 'ATRASADO' || t.status === 'TRIAGEM INICIAL')) return false;
+    if (status === 'FINALIZADO' && t.status !== 'FINALIZADO') return false;
+    if (status === 'TRIAGEM INICIAL' && t.status !== 'TRIAGEM INICIAL') return false;
+    if (nivel  && String(t.nivel) !== nivel) return false;
+    if (cat    && t.catPrincipal !== cat) return false;
+    if (WEEK_FILTER !== null && t.semana !== WEEK_FILTER) return false;
+    if (busca) {
+      const hay = [t.id,t.empresa,t.solicitante,t.catPrincipal,t.descricao,t.tipoSuporte].join(' ').toLowerCase();
+      if (!hay.includes(busca)) return false;
+    }
+    return true;
+  });
+}
+
+function applyFilters() {
+  CURRENT_PAGE = 1;
+  renderTable();
+}
+
+function resetFilters() {
+  ['fMes','fProd','fResp','fStatus','fNivel','fCat'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  const fb = document.getElementById('fBusca');
+  if (fb) { fb.value = ''; fb.placeholder = '🔍 Buscar empresa, ID…'; }
+  WEEK_FILTER = null;
+  applyFilters();
+}
+
+function renderTable() {
+  const filtered = getFilteredTickets();
+  const fCount = document.getElementById('fCount');
+  if (fCount) fCount.textContent = `${filtered.length} tickets`;
+
+  // Sort
+  const sorted = [...filtered].sort((a, b) => {
+    let va = a[SORT_COL], vb = b[SORT_COL];
+    if (va instanceof Date && vb instanceof Date) {
+      return SORT_DIR === 'asc' ? va - vb : vb - va;
+    }
+    va = String(va || '').toLowerCase();
+    vb = String(vb || '').toLowerCase();
+    if (va < vb) return SORT_DIR === 'asc' ? -1 : 1;
+    if (va > vb) return SORT_DIR === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  CURRENT_PAGE = Math.min(CURRENT_PAGE, totalPages);
+  const pageItems = sorted.slice((CURRENT_PAGE-1)*PAGE_SIZE, CURRENT_PAGE*PAGE_SIZE);
+
+  const colDef = [
+    { key:'id',       label:'ID',         w:'80px' },
+    { key:'empresa',  label:'Empresa/Solicitante', w:'auto' },
+    { key:'catPrincipal', label:'Categoria', w:'140px' },
+    { key:'produto',  label:'Produto',     w:'80px' },
+    { key:'nivel',    label:'Nível',       w:'60px' },
+    { key:'status',   label:'Status',      w:'90px' },
+    { key:'criado',   label:'Abertura',    w:'90px' },
+    { key:'concluido',label:'Conclusão',   w:'90px' },
+    { key:'horas',    label:'Horas',       w:'60px' },
+    { key:'responsavel', label:'Resp.',    w:'80px' },
+  ];
+
+  const th = colDef.map(c => {
+    const arr = SORT_COL === c.key ? (SORT_DIR === 'asc' ? '▲' : '▼') : '⇅';
+    const cls = SORT_COL === c.key ? 'on' : '';
+    return `<th style="width:${c.w}" onclick="sortBy('${c.key}')">${c.label} <span class="sort-arr ${cls}">${arr}</span></th>`;
+  }).join('');
+
+  const td = pageItems.length ? pageItems.map(t => `
+    <tr onclick="openModal(${t._idx})">
+      <td><div class="tid">${t.id}</div></td>
+      <td>
+        <div class="empresa-nm">${t.empresa || '—'}</div>
+        <span class="solicit-nm">${t.solicitante || ''}</span>
+      </td>
+      <td>
+        <div style="font-size:11.5px;color:var(--ink2);">${t.catPrincipal}</div>
+        ${t.subcat ? `<div style="font-size:10px;color:var(--fa);margin-top:1px;">${t.subcat}</div>` : ''}
+      </td>
+      <td>${t.produto === 'Mercado Livre' ? '<span class="ppill pml">⚡ ML</span>' : t.produto === 'GD' ? '<span class="ppill pgd">☀ GD</span>' : '<span class="ppill pna">—</span>'}</td>
+      <td><span class="nbadge n${t.nivel}">N${t.nivel}</span></td>
+      <td>${statusPill(t)}</td>
+      <td><span class="date-cell">${t.criadoStr}</span></td>
+      <td><span class="date-cell ${t.concluido ? '' : 'empty'}">${t.concluidoStr}</span></td>
+      <td><span style="font-family:'DM Mono',monospace;font-size:11px;">${t.horas > 0 ? t.horas.toFixed(1)+'h' : '—'}</span></td>
+      <td><span class="resp-cell" title="${t.responsavel}">${t.responsavel.split(' ').slice(0,1).join(' ')}</span></td>
+    </tr>`).join('') :
+    `<tr><td colspan="10"><div class="no-results">🔍 Nenhum ticket encontrado<div class="no-results-sub">Ajuste os filtros para ver mais resultados</div></div></td></tr>`;
+
+  const tblScroll = document.getElementById('tblScroll');
+  if (tblScroll) tblScroll.innerHTML = `<table class="t-table">
+    <thead><tr>${th}</tr></thead>
+    <tbody>${td}</tbody>
+  </table>`;
+
+  // Pagination
+  const footer = document.getElementById('tblFooter');
+  if (footer) {
+    const start = sorted.length ? (CURRENT_PAGE-1)*PAGE_SIZE+1 : 0;
+    const end = Math.min(CURRENT_PAGE*PAGE_SIZE, sorted.length);
+    const pages = [];
+    pages.push(`<button class="page-btn" onclick="goPage(${CURRENT_PAGE-1})" ${CURRENT_PAGE<=1?'disabled':''}>‹</button>`);
+    const maxBtns = 7;
+    let from = Math.max(1, CURRENT_PAGE-3), to = Math.min(totalPages, from+maxBtns-1);
+    if (to-from < maxBtns-1) from = Math.max(1, to-maxBtns+1);
+    for (let i=from; i<=to; i++) {
+      pages.push(`<button class="page-btn ${i===CURRENT_PAGE?'active':''}" onclick="goPage(${i})">${i}</button>`);
+    }
+    pages.push(`<button class="page-btn" onclick="goPage(${CURRENT_PAGE+1})" ${CURRENT_PAGE>=totalPages?'disabled':''}>›</button>`);
+    footer.innerHTML = `<span>${start}-${end} de ${sorted.length}</span><div class="pagination">${pages.join('')}</div>`;
+  }
+}
+
+function sortBy(col) {
+  if (SORT_COL === col) SORT_DIR = SORT_DIR === 'asc' ? 'desc' : 'asc';
+  else { SORT_COL = col; SORT_DIR = 'desc'; }
+  renderTable();
+}
+
+function goPage(p) {
+  const filtered = getFilteredTickets();
+  const total = Math.ceil(filtered.length/PAGE_SIZE);
+  CURRENT_PAGE = Math.max(1, Math.min(p, total));
+  renderTable();
+}
+
+// ── FILTER SHORTCUTS ──────────────────────────────────────────────────
+function filterByStatus(status) {
+  switchTab('tickets');
+  setTimeout(() => {
+    const el = document.getElementById('fStatus');
+    if (el) {
+      el.value = status === 'EM_ABERTO' ? 'EM_ABERTO' : (status || '');
+      applyFilters();
+    }
+  }, 50);
+}
+function filterByNivel(n) {
+  switchTab('tickets');
+  setTimeout(() => {
+    const el = document.getElementById('fNivel');
+    if (el) { el.value = String(n); applyFilters(); }
+  }, 50);
+}
+function filterByCategory(cat) {
+  switchTab('tickets');
+  setTimeout(() => {
+    const el = document.getElementById('fCat');
+    if (el) { el.value = cat; applyFilters(); }
+  }, 50);
+}
+function filterByProduct(prod) {
+  switchTab('tickets');
+  setTimeout(() => {
+    const el = document.getElementById('fProd');
+    if (el) { el.value = prod; applyFilters(); }
+  }, 50);
+}
+function filterByResp(resp) {
+  switchTab('tickets');
+  setTimeout(() => {
+    const el = document.getElementById('fResp');
+    if (el) { el.value = resp; applyFilters(); }
+  }, 50);
+}
+function filterBySetor(setor) {
+  switchTab('tickets');
+  setTimeout(() => {
+    const el = document.getElementById('fBusca');
+    const elCat = document.getElementById('fCat');
+    if (elCat) elCat.value = '';
+    if (el) { el.value = setor; }
+    applyFilters();
+  }, 50);
+}
+function filterByCatSub(cat, sub) {
+  switchTab('tickets');
+  setTimeout(() => {
+    const elCat = document.getElementById('fCat');
+    const elB = document.getElementById('fBusca');
+    if (elCat) { elCat.value = cat; }
+    if (elB) { elB.value = sub; }
+    applyFilters();
+  }, 50);
+}
+
+// ── SETOR / ESPERA CARD ───────────────────────────────────────────────
+function buildSetorEsperaCard(tickets) {
+  const byArea = {};
+  let totalEmEspera = 0;
+  tickets.forEach(t => {
+    const reg = t.registrosEspera || '';
+    if (!reg || reg === '[List]' || reg === '-') return;
+    const match = reg.match(/ - ([^-\n]+)$/);
+    if (!match) return;
+    const area = match[1].trim();
+    if (!area) return;
+    if (!byArea[area]) byArea[area] = { total: 0 };
+    byArea[area].total++;
+    totalEmEspera++;
+  });
+
+  const totalAtrasados = tickets.filter(t => t.atrasado).length;
+  const sorted = Object.entries(byArea).sort((a,b) => b[1].total - a[1].total);
+  const maxT = sorted[0]?.[1].total || 1;
+
+  const summary = `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;">
+    <div style="background:var(--amber-bg);border:1px solid var(--amber-bd);border-radius:8px;padding:10px;text-align:center;">
+      <div style="font-size:20px;font-weight:800;color:var(--amber-txt);font-family:'DM Mono',monospace;line-height:1;">${totalEmEspera}</div>
+      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--amber-txt);opacity:.8;margin-top:3px;">Reg. Espera</div>
+    </div>
+    <div style="background:var(--red-bg);border:1px solid var(--red-bd);border-radius:8px;padding:10px;text-align:center;">
+      <div style="font-size:20px;font-weight:800;color:var(--red-txt);font-family:'DM Mono',monospace;line-height:1;">${totalAtrasados}</div>
+      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--red-txt);opacity:.8;margin-top:3px;">Atrasados</div>
+    </div>
+    <div style="background:var(--gt);border:1px solid var(--gt3);border-radius:8px;padding:10px;text-align:center;">
+      <div style="font-size:20px;font-weight:800;color:var(--g2);font-family:'DM Mono',monospace;line-height:1;">${tickets.length}</div>
+      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--g2);opacity:.8;margin-top:3px;">Total</div>
+    </div>
+  </div>`;
+
+  if (!sorted.length) {
+    return summary + '<div style="color:var(--fa);font-size:12px;text-align:center;padding:12px 0;">Sem registros de espera neste período</div>';
+  }
+
+  const colors = ['#f59e0b','#3b82f6','#8b5cf6','#0891b2','#ec4899','#14b8a6','#6366f1','#ef4444','#84cc16','#a855f7','#1ec97e','#f97316'];
+  const rows = sorted.map(([area, data], idx) => {
+    const pct = (data.total / maxT * 100).toFixed(0);
+    const pctTotal = (data.total / Math.max(totalEmEspera,1) * 100).toFixed(0);
+    const col = colors[idx % colors.length];
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 6px;border-bottom:1px solid var(--ln2);border-radius:6px;transition:background .1s;cursor:pointer;"
+         onmouseover="this.style.background='var(--gt)'" onmouseout="this.style.background=''"
+         onclick="filterByArea('${escapeSingle(area)}')">
+      <div style="width:3px;height:28px;border-radius:2px;background:${col};flex-shrink:0;"></div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:12px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${area}</div>
+        <div style="height:3px;background:var(--ln2);border-radius:2px;margin-top:4px;overflow:hidden;">
+          <div style="height:100%;background:${col};border-radius:2px;width:${pct}%;opacity:.7;"></div>
+        </div>
+      </div>
+      <div style="flex-shrink:0;text-align:right;">
+        <span style="font-family:'DM Mono',monospace;font-size:13px;font-weight:700;color:var(--ink2);">${data.total}</span>
+        <span style="font-size:9.5px;color:var(--fa);margin-left:4px;">${pctTotal}%</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  return summary + `<div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);margin-bottom:6px;">Áreas com registro de espera — clique para filtrar</div><div>${rows}</div>`;
+}
+
+
+// ── NPS MODAL ─────────────────────────────────────────────────────────
+function openNPSModal(tickets) {
+  const avaliados = tickets.filter(t => t.avMedia > 0).sort((a,b) => a.avMedia - b.avMedia);
+  if (!avaliados.length) {
+    showToast('ℹ️', 'Nenhuma avaliação recebida neste período.');
+    return;
+  }
+  const avg = (avaliados.reduce((s,t)=>s+t.avMedia,0)/avaliados.length).toFixed(2);
+  const dist = {5:0,4:0,3:0,2:0,1:0};
+  avaliados.forEach(t => { const k = Math.round(t.avMedia); if (dist[k]!==undefined) dist[k]++; });
+  const maxDist = Math.max(...Object.values(dist), 1);
+
+  const distBars = [5,4,3,2,1].map(n => {
+    const w = (dist[n]/maxDist*100).toFixed(0);
+    const pct = avaliados.length > 0 ? (dist[n]/avaliados.length*100).toFixed(0) : 0;
+    const color = n >= 4 ? '#1ec97e' : n === 3 ? '#f59e0b' : '#ef4444';
+    return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+      <span style="font-size:11px;color:var(--amber);width:44px;text-align:right;flex-shrink:0;">${'★'.repeat(n)}</span>
+      <div style="flex:1;height:6px;background:var(--ln2);border-radius:3px;overflow:hidden;">
+        <div style="height:100%;background:${color};border-radius:3px;width:${w}%;transition:width .4s;"></div>
+      </div>
+      <span style="font-size:10.5px;font-weight:700;font-family:'DM Mono',monospace;min-width:18px;color:${color};">${dist[n]}</span>
+      <span style="font-size:9.5px;color:var(--fa);min-width:28px;">${pct}%</span>
+    </div>`;
+  }).join('');
+
+  const rows = avaliados.map(t => {
+    const stars = '★'.repeat(Math.round(t.avMedia)) + '☆'.repeat(5-Math.round(t.avMedia));
+    const starColor = t.avMedia >= 4 ? '#f59e0b' : '#ef4444';
+    return `<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--ln2);cursor:pointer;"
+              onclick="openModal(${t._idx})">
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:12.5px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${t.empresa || '—'}</div>
+        <div style="font-size:11px;color:var(--mu);margin-top:1px;">${t.solicitante || ''} · <span style="font-family:'DM Mono',monospace;color:var(--g2);">${t.id}</span></div>
+        ${t.avGeral ? `<div style="font-size:11px;color:var(--ink2);margin-top:3px;font-style:italic;">"${escHTML(t.avGeral)}"</div>` : ''}
+      </div>
+      <div style="flex-shrink:0;text-align:right;">
+        <div style="font-size:14px;color:${starColor};letter-spacing:1px;">${stars}</div>
+        <div style="font-size:10.5px;font-weight:700;color:var(--mu);margin-top:1px;">${t.avMedia.toFixed(1)}</div>
+        ${t.avEquipe ? `<div style="font-size:9.5px;color:var(--fa);">Eq:${t.avEquipe} · Tm:${t.avTempo||'—'} · Ql:${t.avQualidade||'—'}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+
+  // Reuse the existing modal
+  document.getElementById('mId').textContent = `${avaliados.length} avaliações`;
+  document.getElementById('mEmpresa').textContent = 'NPS — Satisfação dos Clientes';
+  document.getElementById('mSub').textContent = `Média geral: ${avg} ★ · Período selecionado`;
+
+  document.getElementById('modalBody').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+      <div style="background:var(--gt);border:1px solid var(--gt3);border-radius:10px;padding:14px;text-align:center;">
+        <div style="font-size:32px;font-weight:800;color:var(--g2);font-family:'DM Mono',monospace;">${avg}</div>
+        <div style="font-size:13px;color:var(--amber);">${'★'.repeat(Math.round(parseFloat(avg)))}${'☆'.repeat(5-Math.round(parseFloat(avg)))}</div>
+        <div style="font-size:10px;color:var(--mu);margin-top:4px;text-transform:uppercase;letter-spacing:.06em;">Média geral</div>
+        <div style="font-size:9.5px;color:var(--fa);margin-top:2px;">Base: ${avaliados.length} avaliações</div>
+      </div>
+      <div style="background:var(--ln2);border-radius:10px;padding:14px;">
+        <div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mu);margin-bottom:8px;">Distribuição</div>
+        ${distBars}
+      </div>
+    </div>
+    <div style="font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);margin-bottom:6px;">
+      Avaliações individuais <span style="font-weight:400;color:var(--fa);">— clique para ver o ticket completo</span>
+    </div>
+    <div>${rows}</div>
+  `;
+
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+// ── AREA MODAL (tickets por área de espera) ───────────────────────────
+function openAreaModal(area, tickets) {
+  const filtered = tickets.filter(t => {
+    const reg = t.registrosEspera || '';
+    const match = reg.match(/ - ([^-\n]+)$/);
+    return match && match[1].trim() === area;
+  });
+
+  document.getElementById('mId').textContent = filtered.length + ' tickets';
+  document.getElementById('mEmpresa').textContent = '🏢 ' + area;
+  document.getElementById('mSub').textContent = 'Tickets com registro de espera nesta área';
+
+  const finalizados = filtered.filter(t=>t.status==='FINALIZADO').length;
+  const emAberto = filtered.filter(t=>t.status==='ATRASADO'||t.status==='TRIAGEM INICIAL').length;
+  const atrasados = filtered.filter(t=>t.atrasado).length;
+
+  const summary = `
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;">
+    <div style="background:var(--ln2);border-radius:8px;padding:10px;text-align:center;">
+      <div style="font-size:20px;font-weight:800;color:var(--ink);font-family:'DM Mono',monospace;">${filtered.length}</div>
+      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin-top:2px;">Total</div>
+    </div>
+    <div style="background:${emAberto>0?'var(--amber-bg)':'var(--ln2)'};border-radius:8px;padding:10px;text-align:center;">
+      <div style="font-size:20px;font-weight:800;color:${emAberto>0?'var(--amber-txt)':'var(--mu)'};font-family:'DM Mono',monospace;">${emAberto}</div>
+      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:${emAberto>0?'var(--amber-txt)':'var(--mu)'};margin-top:2px;">Em Aberto</div>
+    </div>
+    <div style="background:${atrasados>0?'var(--red-bg)':'var(--ln2)'};border-radius:8px;padding:10px;text-align:center;">
+      <div style="font-size:20px;font-weight:800;color:${atrasados>0?'var(--red-txt)':'var(--mu)'};font-family:'DM Mono',monospace;">${atrasados}</div>
+      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:${atrasados>0?'var(--red-txt)':'var(--mu)'};margin-top:2px;">C/ Atraso</div>
+    </div>
+  </div>`;
+
+  const rows = filtered.map(t => {
+    const statusPill = t.status==='FINALIZADO'
+      ? `<span class="spill s-fin">✓ Finalizado</span>`
+      : t.atrasado ? `<span class="spill s-atr">⚠ C/ Atraso</span>`
+      : `<span class="spill s-tri">↻ ${t.status||'Em Aberto'}</span>`;
+    return `
+    <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--ln2);cursor:pointer;transition:background .1s;"
+         onmouseover="this.style.background='var(--gt)';this.style.borderRadius='6px'"
+         onmouseout="this.style.background='';this.style.borderRadius=''"
+         onclick="closeModal();setTimeout(()=>openModal(${t._idx}),150)">
+      <div style="flex-shrink:0;">
+        <div style="font-family:'DM Mono',monospace;font-size:11px;font-weight:600;color:var(--g2);">${t.id}</div>
+        <div style="font-size:10px;color:var(--fa);margin-top:1px;">${t.criadoStr}</div>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:12.5px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${t.empresa||'—'}</div>
+        <div style="font-size:11px;color:var(--mu);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${t.catPrincipal}</div>
+      </div>
+      <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+        ${statusPill}
+        <span class="nbadge n${t.nivel}" style="font-size:9px;">N${t.nivel}</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('modalBody').innerHTML = summary +
+    `<div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);margin-bottom:8px;">Tickets — clique para ver detalhes</div>
+    <div>${rows}</div>`;
+
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function filterByArea(area) {
+  switchTab('tickets');
+  setTimeout(() => {
+    // Reset other filters, set search to area name
+    resetFilters();
+    const el = document.getElementById('fBusca');
+    if (el) { el.value = area; applyFilters(); }
+  }, 60);
+}
+
+function filterByWeek(weekNum) {
+  switchTab('tickets');
+  setTimeout(() => {
+    resetFilters();
+    WEEK_FILTER = weekNum;
+    applyFilters();
+    // Show week indicator in search field
+    const el = document.getElementById('fBusca');
+    if (el) el.placeholder = `🗓 Semana ${weekNum} (filtro ativo)`;
+  }, 60);
+}
+
+// Reset week filter when resetFilters is called
+
+function filterByEmpresa(empresa) {
+  switchTab('tickets');
+  setTimeout(() => {
+    resetFilters();
+    const el = document.getElementById('fBusca');
+    if (el) { el.value = empresa; applyFilters(); }
+  }, 60);
+}
+
+// ── MODAL ─────────────────────────────────────────────────────────────
+function openModal(idx) {
+  const t = ALL_TICKETS[idx];
+  if (!t) return;
+
+  document.getElementById('mId').textContent = t.id;
+  document.getElementById('mEmpresa').textContent = t.empresa || '—';
+  document.getElementById('mSub').textContent = t.catPrincipal + (t.subcat ? ' › ' + t.subcat : '');
+
+  const npsStars = t.avMedia > 0 ? '★'.repeat(Math.round(t.avMedia)) + '☆'.repeat(5-Math.round(t.avMedia)) : null;
+  const slaClass = t.atrasado ? 'nok' : (t.status === 'FINALIZADO' ? 'ok' : '');
+  const slaText  = t.atrasado ? '⚠ Finalizado com atraso' : t.status === 'FINALIZADO' ? '✓ Finalizado dentro do prazo' : '↻ Em andamento';
+
+  const chTag = {
+    'E-mail':'<span class="ch-tag ch-email">📧 E-mail</span>',
+    'WhatsApp':'<span class="ch-tag ch-wpp">💬 WhatsApp</span>',
+    'Ligação telefônica':'<span class="ch-tag ch-tel">📞 Ligação</span>',
+  };
+
+  document.getElementById('modalBody').innerHTML = `
+    <div class="mpills">
+      ${t.produto === 'Mercado Livre' ? '<span class="ppill pml">⚡ Mercado Livre</span>' : t.produto === 'GD' ? '<span class="ppill pgd">☀ GD</span>' : ''}
+      <span class="nbadge n${t.nivel}">${t.nivelLabel}</span>
+      ${statusPill(t)}
+      ${t.nivelCliente ? `<span class="mpill">👤 ${t.nivelCliente}</span>` : ''}
+      ${t.prioridade ? `<span class="pr-tag pr-${t.prioridade}">${t.prioridade}</span>` : ''}
+      ${t.canal && chTag[t.canal] ? chTag[t.canal] : ''}
+    </div>
+    ${slaClass ? `<div class="msla ${slaClass}">${slaText} · ${t.horas > 0 ? t.horas.toFixed(1) + ' horas úteis' : ''} · ${t.diasUteis > 0 ? t.diasUteis + ' dia(s) útil(is)' : ''}</div>` : ''}
+    <div class="m-timeline">
+      <div class="m-tl-step">
+        <div class="m-tl-icon">📥</div>
+        <div class="m-tl-lbl">Abertura</div>
+        <div class="m-tl-val">${t.criadoStr}</div>
+      </div>
+      <div style="flex-shrink:0;color:var(--fa);font-size:18px;padding:0 8px;">→</div>
+      <div class="m-tl-step">
+        <div class="m-tl-icon">⚙️</div>
+        <div class="m-tl-lbl">Responsável</div>
+        <div class="m-tl-val" style="font-size:10px;">${t.responsavel.split(' ').slice(0,2).join(' ') || '—'}</div>
+      </div>
+      <div style="flex-shrink:0;color:var(--fa);font-size:18px;padding:0 8px;">→</div>
+      <div class="m-tl-step">
+        <div class="m-tl-icon">${t.atrasado ? '⚠️' : '✅'}</div>
+        <div class="m-tl-lbl">Conclusão</div>
+        <div class="m-tl-val">${t.concluidoStr}</div>
+      </div>
+    </div>
+    <div class="mgrid">
+      <div class="mfield"><label>Empresa</label><p>${t.empresa || '—'}</p></div>
+      <div class="mfield"><label>Solicitante</label><p>${t.solicitante || '—'}</p></div>
+      <div class="mfield"><label>E-mail</label><p class="mono">${t.email || '—'}</p></div>
+      <div class="mfield"><label>Telefone</label><p class="mono">${t.telefone || '—'}</p></div>
+      <div class="mfield"><label>Tipo de Suporte</label><p>${t.tipoSuporte || '—'}</p></div>
+      <div class="mfield"><label>Tempo SLA</label><p class="mono">${t.horas > 0 ? t.horas.toFixed(2) + ' horas úteis' : '—'}</p></div>
+      <div class="mfield full"><label>Categoria</label><p>${t.catPrincipal}${t.subcat ? ' › ' + t.subcat : ''}</p></div>
+    </div>
+    ${t.descricao ? `<div class="mtext"><label>Descrição do Problema</label><p>${escHTML(t.descricao)}</p></div>` : ''}
+    ${t.resolucao ? `<div class="mtext"><label>Resolução</label><p class="res">${escHTML(t.resolucao)}</p></div>` : ''}
+    ${t.avMedia > 0 ? `
+    <div class="mtext">
+      <label>Avaliação do Cliente</label>
+      <div class="mav">
+        <div class="mstars">${npsStars}</div>
+        <div class="mav-val">${t.avMedia.toFixed(1)}</div>
+        <div>
+          <div class="mav-lbl">${t.avGeral || 'Avaliação recebida'}</div>
+          ${t.avEquipe ? `<div style="font-size:10px;color:var(--mu);margin-top:2px;">Equipe: ${t.avEquipe}★ · Tempo: ${t.avTempo || '—'}★ · Qualidade: ${t.avQualidade || '—'}★</div>` : ''}
+        </div>
+      </div>
+    </div>` : ''}
+  `;
+
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+});
+
+// ── UTILS ─────────────────────────────────────────────────────────────
+function groupBy(arr, key) {
+  return arr.reduce((acc, item) => {
+    const k = item[key] || '';
+    if (!acc[k]) acc[k] = [];
+    acc[k].push(item);
+    return acc;
+  }, {});
+}
+
+function escapeSingle(s) {
+  return String(s).replace(/'/g, "\\'");
+}
+
+function escHTML(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function showToast(icon, msg, dur=3500) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastIcon').textContent = icon;
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+</script>
+</body>
+</html>
